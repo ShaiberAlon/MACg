@@ -1,0 +1,7 @@
+class_name	percent	number_of_genes	number_of_groups_per_class	average_number_of_genes_per_group
+NaN	0	0		
+STC	0.3	1200		
+MTC	0.2	800		
+TA	0.3	1200		
+NTC	0.1	400	10	4
+NTA	0.1	400	20	2
