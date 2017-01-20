@@ -58,6 +58,8 @@ def gen_gene_group_table_from_genome_classes_table(group_class_table):
     specified and the class_id is specified
 
     """
+    # FIXME: need to change it so that class 1, 2, and 3 belong to the same group
+    # FIXME: add copy_number column
     gene_group_table = {}
     number_of_genes = 0
     for group in group_class_table.keys():
@@ -83,16 +85,16 @@ def save_gene_group_table_as_txt(gene_group_table, txt_output):
     save_dict_as_tab_delimited_txt(gene_group_table, txt_output, 'gene_callers_id')
 
 
-def gen_abundance_of_groups_in_sample(group_class_table):
+def gen_abundance_of_groups_in_sample(group_class_table, order_of_magnitudes=11):
     """ takes a group_class_table and generates a random abundance number for each class
      input: group_class_table
      output: group_abundance_table (a dictionary)
      The sum of all abundances equals 1
     """
     number_of_groups = len(group_class_table)
-    max_ration_between_max_and_min_abundant_group = 1000000000000
-    group_abundance_table = dict(zip(list(group_class_table.keys()), random.sample(range(
-        max_ration_between_max_and_min_abundant_group), number_of_groups)))
+    group_abundance_table = dict(zip(list(group_class_table.keys()), random.sample(
+        number_of_groups * list(numpy.random.uniform(high=1, low=0, size=order_of_magnitudes) * 10**numpy.array(range(
+            0, order_of_magnitudes))), number_of_groups)))
 
     return group_abundance_table
 
