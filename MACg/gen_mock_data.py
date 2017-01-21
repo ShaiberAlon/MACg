@@ -85,16 +85,18 @@ def save_gene_group_table_as_txt(gene_group_table, txt_output):
     save_dict_as_tab_delimited_txt(gene_group_table, txt_output, 'gene_callers_id')
 
 
-def gen_abundance_of_groups_in_sample(group_class_table, order_of_magnitudes=11):
+def gen_abundance_of_groups_in_sample(group_class_table, a=0.2):
     """ takes a group_class_table and generates a random abundance number for each class
-     input: group_class_table
+     input:
+        group_class_table
+        a - shape of power distribution (default: 0.2)
      output: group_abundance_table (a dictionary)
      The sum of all abundances equals 1
     """
     number_of_groups = len(group_class_table)
-    group_abundance_table = dict(zip(list(group_class_table.keys()), random.sample(
-        number_of_groups * list(numpy.random.uniform(high=1, low=0, size=order_of_magnitudes) * 10**numpy.array(range(
-            0, order_of_magnitudes))), number_of_groups)))
+    abundance_array = numpy.random.power(a, number_of_groups)
+
+    group_abundance_table = dict(zip(list(group_class_table.keys()), list(abundance_array)))
 
     return group_abundance_table
 
@@ -109,7 +111,7 @@ def gen_gene_abundance_from_group_abundance_table(group_abundance_table, gene_gr
         group_callers_id = gene_group_table[gene_callers_id]['group_callers_id']
         mu = group_abundance_table[group_callers_id]
         sigma = 0.5 * mu
-        gene_abundance = max(0, numpy.around(numpy.random.normal(loc=mu, scale=sigma), decimals=0))
+        gene_abundance = max(0, numpy.random.normal(loc=mu, scale=sigma))
         gene_abundance_list.append(gene_abundance)
     gene_abundance_table = dict(zip(gene_group_table.keys(), gene_abundance_list))
     return gene_abundance_table
