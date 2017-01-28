@@ -31,11 +31,13 @@ def gen_group_class_table(genome_classes_table):
             group_class_table[group_caller_id]['class_id'] = gene_class_id_dictionary[gene_class]
             group_class_table[group_caller_id]['number_of_genes'] = int(genome_classes_table[gene_class][
                 'number_of_genes'])
+            group_class_table[group_caller_id]['probability_of_occurrence'] = float(genome_classes_table[gene_class][
+                                                                            'probability_of_occurrence'])
             group_caller_id += 1
         else:
             number_of_groups = int(genome_classes_table[gene_class]['number_of_groups_per_class'])
             if int(genome_classes_table[gene_class]['number_of_genes']) < number_of_groups:
-                raise BaseException('number of groups in a class must')
+                raise BaseException('number of groups in a class must be smaller than number of genes in the class')
             # the maximum number of genes in a group is set so every group in the class would have at least one member
             max_number_of_genes = int(genome_classes_table[gene_class]['number_of_genes']) - number_of_groups
             for i in range(number_of_groups):
@@ -47,6 +49,8 @@ def gen_group_class_table(genome_classes_table):
                 max_number_of_genes -= number_of_genes
                 group_class_table[group_caller_id]['number_of_genes'] = number_of_genes
                 group_class_table[group_caller_id]['class_id'] = gene_class_id_dictionary[gene_class]
+                group_class_table[group_caller_id]['probability_of_occurrence'] = float(
+                    genome_classes_table[gene_class]['probability_of_occurrence'])
                 group_caller_id += 1
     return group_class_table
 
@@ -94,9 +98,43 @@ def gen_abundance_of_groups_in_sample(group_class_table, a=0.2):
      The sum of all abundances equals 1
     """
     number_of_groups = len(group_class_table)
-    abundance_array = numpy.random.power(a, number_of_groups)
+    # generate the occurrence of each group in the sample
+    # TODO: in the future, this argument would be supplied:
+    probability_of_taxon = 0.95 # the probability of the taxon-of-interest to be present in any sample
+    occurrence_of_taxon = numpy.random.choice([0, 1], size=1, p=[1-probability_of_taxon, probability_of_taxon])
+    abundance_of_taxon = occurrence_of_taxon * numpy.random.power(a,1)
 
-    group_abundance_table = dict(zip(list(group_class_table.keys()), list(abundance_array)))
+    # generating the abundance of all groups
+    group_abundance_table = {}
+    for group_id in range(number_of_groups):
+
+        # determining the abundance of each group
+        if group_class_table[group_id]['class_id'] == 0:
+            group_abundance = 0
+        elif group_class_table[group_id]['class_id'] in [1,2,3]:
+            # TODO: for now there are no multi-copy genes, hence class 1 and 2 are identicle
+            # TODO: Class 3 (Taxon-specific accessory) could also have multi-copies in future versions
+            group_abundance = abundance_of_taxon
+        elif group_class_table[group_id]['class_id'] in [4,5]:
+            # Non taxon-specific genes, have abundance that is greater or equal to the abundance of the taxon
+            # for the core genes, it is a very reasonable assumption (from their definition as core)
+            # The hidden assumption here is that whenever a non taxon-specific accessory gene is occurring,
+            # it is also occurring in the taxon
+            group_abundance = abundance_of_taxon + numpy.random.power(a,1)
+
+        # determining the occurrence of each group
+        if group_class_table[group_id]['class_id'] == 0:
+            group_occurrence = 0
+        elif group_class_table[group_id]['class_id'] in [1,2,4]:
+            # core genes always occur
+            group_occurrence = 1
+        elif group_class_table[group_id]['class_id'] in [3,5]:
+            # accessory genes have a certain probability of occurrence
+            probability_of_occurrence = group_class_table[group_id]['probability_of_occurrence']
+            group_occurrence = numpy.random.choice([0, 1], size=1, p=[1-probability_of_occurrence, probability_of_occurrence])
+
+        # generating the abundance of the group by multiplying abundance and occurrence
+        group_abundance_table[group_id] = float(group_occurrence * group_abundance)
 
     return group_abundance_table
 
@@ -110,8 +148,11 @@ def gen_gene_abundance_from_group_abundance_table(group_abundance_table, gene_gr
     for gene_callers_id in gene_group_table.keys():
         group_callers_id = gene_group_table[gene_callers_id]['group_callers_id']
         mu = group_abundance_table[group_callers_id]
-        sigma = 0.5 * mu
-        gene_abundance = max(0, numpy.random.normal(loc=mu, scale=sigma))
+        if mu == 0:
+            gene_abundance = 0
+        else:
+            sigma = 0.5 * mu
+            gene_abundance = max(0, numpy.random.normal(loc=mu, scale=sigma))
         gene_abundance_list.append(gene_abundance)
     gene_abundance_table = dict(zip(gene_group_table.keys(), gene_abundance_list))
     return gene_abundance_table
