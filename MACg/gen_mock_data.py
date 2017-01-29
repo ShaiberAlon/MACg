@@ -5,6 +5,7 @@ import random
 import numpy
 # dictionary to translate from class name to class_caller_id
 gene_class_id_dictionary = dict(NaN=0, STC=1, MTC=2, TA=3, NTC=4, NTA=5)
+gene_class_id_dictionary_reverese = dict(zip(gene_class_id_dictionary.values(),gene_class_id_dictionary.keys()))
 
 
 def read_genome_classes_table(genome_classes_table_filename):
@@ -192,6 +193,20 @@ def save_mock_merged_coverage_table_as_txt(mock_merged_coverage_table, output):
     save_dict_as_tab_delimited_txt(mock_merged_coverage_table, output, first_column_title='gene_callers_id')
 
 
+def save_additional_layers_txt_from_gene_group_table(gene_group_table,output_file):
+    # This function is needed because if the additional layers are supplied with numbers and not characters then
+    # anvi'o shows these with bars instead of colors
+    with open(output_file, 'w') as o:
+        tsv_writer = csv.writer(o, delimiter='\t')
+        # writing the first row
+        row = ['gene_callers_id', 'group_callers_id', 'class_id']
+        tsv_writer.writerow(row)
+        for gene_id in gene_group_table.keys():
+            row = [gene_id, 'g' + str(gene_group_table[gene_id]['group_callers_id']), gene_class_id_dictionary_reverese[
+                gene_group_table[gene_id]['class_id']]]
+            tsv_writer.writerow(row)
+
+
 def tests():
     genome_classes_table_filename = '../tests/sandbox/example_genome_classes_table.txt'
     number_of_samples = 100
@@ -230,6 +245,10 @@ def tests():
     save_mock_merged_coverage_table_as_txt(mock_merged_coverage_table, test_output)
     test_output_transposed = '../tests/sandbox/test_output_transposed.txt'
     transpose_txt(test_output, test_output_transposed)
+
+    # save an additional_layers file
+    additional_layers_txt = '../tests/sandbox/test_additional_layers.txt'
+    save_additional_layers_txt_from_gene_group_table(gene_group_table,additional_layers_txt)
 
 
 # Testing all methods
