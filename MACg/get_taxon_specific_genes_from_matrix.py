@@ -16,11 +16,10 @@ def get_data_from_txt_file(file_name):
 
     gene_callers_id_dictionary = {}
     for i in range(1,Ngenes):
-        gene_callers_id_dictionary[i-1] = data_list[i][0]
+        gene_callers_id_dictionary[i-1] = int(data_list[i][0])
 
     data = np.loadtxt(file_name, delimiter='\t', skiprows=1, usecols=range(1, Nsamples + 1))
     return(data, sample_name_dictionary, gene_callers_id_dictionary)
-
 
 
 def get_positive_samples(data,alpha=0.05,beta=0.5):
@@ -45,7 +44,7 @@ def get_positive_samples(data,alpha=0.05,beta=0.5):
     return positive_samples_list, gene_detection_matrix
 
 
-def get_taxon_specific_candidates(data, positive_samples_list, gamma=10):
+def get_taxon_specific_candidates(data, positive_samples_list, gene_detection_matrix, gamma=10):
     # Find the taxon specific candidate genes in each sample
     # input:
     #     data - data matrix
@@ -60,12 +59,14 @@ def get_taxon_specific_candidates(data, positive_samples_list, gamma=10):
     for sample_number in positive_samples_list:
         converged = False
         gene_number = 1
-        # approximation of the median value:
-        median_coverage_index = np.argsort(data[:,sample_number])[len(data[:,sample_number])//2]
+        # approximation of the median value (only of detected genes):
+        detected_genes = np.nonzero(gene_detection_matrix[:,sample_number])
+        median_coverage_index = np.argsort(data[detected_genes,sample_number][0])[len(
+            data[detected_genes,sample_number])//2]
         median_coverage = data[median_coverage_index,sample_number]
         sorted_indexes = np.argsort(np.absolute(data[:, sample_number] - median_coverage))
         print('sample number %s, the median value is %s in index number %s' % (sample_number, median_coverage, median_coverage_index))
-        print(sorted_indexes)
+        print('the sorted indexes: %s' % sorted_indexes)
         var = 0
         mean = median_coverage
         cluster = {'gene_ids': [median_coverage_index], 'gene_coverages': [median_coverage]}
@@ -75,7 +76,7 @@ def get_taxon_specific_candidates(data, positive_samples_list, gamma=10):
             if var == 0:
                 cutoff = 0.1 * mean
             else:
-                cutoff = gamma * np.sqrt(var)
+                cutoff = max(gamma * np.sqrt(var), 0.1 * mean)
             if abs(mean - new_gene_coverage) > cutoff:
                 converged = True
             else:
@@ -94,7 +95,7 @@ def get_taxon_specific_candidates(data, positive_samples_list, gamma=10):
 
 
 def get_taxon_specific_labels_from_taxon_specific_candidates_matrix(taxon_specific_candidates_matrix,
-                                                                    gene_detection_matrix, eta=0.1):
+                                                                    gene_detection_matrix, eta=0.5):
     # Decide which genes are taxon specific according to a majority vote
     # input:
     #     taxon_specific_candidates_matrix
@@ -104,31 +105,106 @@ def get_taxon_specific_labels_from_taxon_specific_candidates_matrix(taxon_specif
     Ngenes = len(taxon_specific_candidates_matrix)
     taxon_specific_genes = []
     for gene_number in range(Ngenes):
+        print('gene %s is detected in %s samples and TS in %s samples, and overlap in %s samples' % (gene_number,
+                                                                          sum(taxon_specific_candidates_matrix[
+                                                                                  gene_number,:]),
+                                                                          sum(gene_detection_matrix[gene_number,:]),
+                                                                                                     sum(np.multiply(
+                                                                                                         taxon_specific_candidates_matrix[gene_number,:],gene_detection_matrix[gene_number,:]))))
         if sum(np.multiply(taxon_specific_candidates_matrix[gene_number,:],gene_detection_matrix[gene_number,
                                                                            :])) / sum(gene_detection_matrix[
                                                                                       gene_number,:]) > eta:
             taxon_specific_genes.append(gene_number)
     return taxon_specific_genes
 
+def gen_taxon_specific_dictionary_from_list(taxon_specific_genes,gene_callers_id_dictionary):
+    taxon_specific_dictionary = dict(zip(gene_callers_id_dictionary.values(),['NTS'] * len(
+        gene_callers_id_dictionary)))
+    for gene_id in taxon_specific_genes:
+        taxon_specific_dictionary[gene_id] = 'TS'
+    return taxon_specific_dictionary
 
-def save_taxon_specific_labels_to_txt(taxon_specific_genes, txt_output):
-    with open(txt_output, 'w') as txt_file:
-        writer = csv.writer(txt_file, delimiter='\t')
-        # writing the title row
-        first_column_title = ['gene_callers_id', 'taxon_specific_label']
-        writer.writerow(first_column_title)
-        for key, value in taxon_specific_genes.items():
-            writer.writerow([key] + list(value.values()))
+
+
+def save_tabular_to_txt(dictionary, new_txt_output, first_column_title, additional_columns_title,
+    old_txt=None):
+    if old_txt is None:
+        with open(new_txt_output, 'w') as txt_file:
+            writer = csv.writer(txt_file, delimiter='\t')
+            # writing the title row
+            first_row = [first_column_title] + additional_columns_title
+            writer.writerow(first_row)
+            for key, value in dictionary.items():
+                writer.writerow([key, value])
+    else:
+        with open(old_txt, 'r') as old_file:
+            reader = csv.reader(old_file, delimiter='\t')
+            with open(new_txt_output, 'w') as txt_file:
+                writer = csv.writer(txt_file, delimiter='\t')
+                first_row = list(next(reader)) + additional_columns_title
+                writer.writerow(first_row)
+                for row in reader:
+                    print(row + [dictionary[int(row[0])]])
+                    writer.writerow(row + [dictionary[int(row[0])]])
+
+
+def save_taxon_specific_labels_to_txt(taxon_specific_dictionary, txt_output, additional_layers_txt=None):
+    save_tabular_to_txt(dictionary=taxon_specific_dictionary,new_txt_output=txt_output,
+                        first_column_title='gene_callers_id',additional_columns_title=['taxon_specific_label'],
+                        old_txt=additional_layers_txt)
+
+    # if additional_layers_txt is None:
+    #     with open(txt_output, 'w') as txt_file:
+    #         writer = csv.writer(txt_file, delimiter='\t')
+    #         # writing the title row
+    #         first_row = ['gene_callers_id', 'taxon_specific_label']
+    #         writer.writerow(first_row)
+    #         for key, value in taxon_specific_dictionary.items():
+    #             writer.writerow([key, value])
+    # else:
+    #     with open(additional_layers_txt, 'r') as old_file:
+    #         reader = csv.reader(old_file, delimiter='\t')
+    #         with open(txt_output, 'w') as txt_file:
+    #             writer = csv.writer(txt_file, delimiter='\t')
+    #             first_row = list(next(reader)) + ['taxon_specific_label']
+    #             writer.writerow(first_row)
+    #             for row in reader:
+    #                 print(row + [taxon_specific_dictionary[int(row[0])]])
+    #                 writer.writerow(row + [taxon_specific_dictionary[int(row[0])]])
+def get_samples_detection_dictionay(positive_samples_list, sample_name_dictionary):
+    samples_detection_dictionay = {}
+    for sample in sample_name_dictionary:
+        if sample in positive_samples_list:
+            samples_detection_dictionay[sample_name_dictionary[sample]] = 'P'
+        else:
+            samples_detection_dictionay[sample_name_dictionary[sample]] = 'N'
+    return samples_detection_dictionay
+
+def get_negative_samples(positive_samples_list,sample_name_dictionary):
+    negative_samples = list(set(sample_name_dictionary.keys()) - set(positive_samples_list))
+    return negative_samples
+
+
+def save_sample_detection_information_to_sample_information_file(positive_samples_list, sample_name_dictionary,
+                                                                 txt_output, sample_information_txt=None):
+    samples_detection_dictionay = get_samples_detection_dictionay(positive_samples_list, sample_name_dictionary)
+    save_tabular_to_txt(dictionary=samples_detection_dictionay, new_txt_output=txt_output,
+                        first_column_title='samples', additional_columns_title=['detection_of_genome'],
+                                                                                old_txt=sample_information_txt)
 
 
 def tests():
-    input_data = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/p214_Bfrag_positive_with_M_GG_gene_coverage.txt'
+    # input_data = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/p214_Bfrag_positive_with_M_GG_gene_coverage.txt'
+    input_data = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/test_output_transposed.txt'
     data, sample_name_dictionary, gene_callers_id_dictionary = get_data_from_txt_file(input_data)
-    print(data[0:4,0])
+
+    # get the positive samples
     positive_samples_list , gene_detection_matrix = get_positive_samples(data)
     print('The number of positive samples is %s'%len(positive_samples_list))
+    negative_samples = get_negative_samples(positive_samples_list,sample_name_dictionary)
+    print('The following samples are negative: %s' % ([sample_name_dictionary[key] for key in negative_samples]))
     # testing get_taxon_specific_candidates
-    taxon_specific_candidates_matrix = get_taxon_specific_candidates(data, positive_samples_list)
+    taxon_specific_candidates_matrix = get_taxon_specific_candidates(data, positive_samples_list, gene_detection_matrix)
     print(len(taxon_specific_candidates_matrix))
     print(len(np.nonzero(taxon_specific_candidates_matrix)[0]))
 
@@ -137,5 +213,18 @@ def tests():
         taxon_specific_candidates_matrix, gene_detection_matrix, eta=0.8)
     print(taxon_specific_genes)
     print(len(taxon_specific_genes))
+
+    # save the results
+    taxon_specific_dictionary = gen_taxon_specific_dictionary_from_list(taxon_specific_genes,
+                                                                        gene_callers_id_dictionary)
+    print(taxon_specific_dictionary)
+    print(taxon_specific_dictionary[80])
+    txt_output = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/test_taxon_specific_genes.txt'
+    additional_layers_txt = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/test_additional_layers.txt'
+    save_taxon_specific_labels_to_txt(taxon_specific_dictionary, txt_output, additional_layers_txt)
+
+    sample_information_txt = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/test_sample_information.txt'
+    save_sample_detection_information_to_sample_information_file(positive_samples_list, sample_name_dictionary,
+                                                                 sample_information_txt)
 if __name__ == '__main__':
     tests()
