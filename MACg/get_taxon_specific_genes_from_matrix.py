@@ -187,24 +187,7 @@ def save_taxon_specific_labels_to_txt(taxon_specific_dictionary, txt_output, add
                         first_column_title='gene_callers_id',additional_columns_title=['taxon_specific_label'],
                         old_txt=additional_layers_txt)
 
-    # if additional_layers_txt is None:
-    #     with open(txt_output, 'w') as txt_file:
-    #         writer = csv.writer(txt_file, delimiter='\t')
-    #         # writing the title row
-    #         first_row = ['gene_callers_id', 'taxon_specific_label']
-    #         writer.writerow(first_row)
-    #         for key, value in taxon_specific_dictionary.items():
-    #             writer.writerow([key, value])
-    # else:
-    #     with open(additional_layers_txt, 'r') as old_file:
-    #         reader = csv.reader(old_file, delimiter='\t')
-    #         with open(txt_output, 'w') as txt_file:
-    #             writer = csv.writer(txt_file, delimiter='\t')
-    #             first_row = list(next(reader)) + ['taxon_specific_label']
-    #             writer.writerow(first_row)
-    #             for row in reader:
-    #                 print(row + [taxon_specific_dictionary[int(row[0])]])
-    #                 writer.writerow(row + [taxon_specific_dictionary[int(row[0])]])
+
 def get_samples_detection_dictionay(positive_samples_list, sample_name_dictionary):
     samples_detection_dictionay = {}
     for sample in sample_name_dictionary:
