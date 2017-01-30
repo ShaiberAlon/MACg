@@ -236,7 +236,6 @@ def tests():
     taxon_specific_dictionary = gen_taxon_specific_dictionary_from_list(taxon_specific_genes,
                                                                         gene_callers_id_dictionary)
     print(taxon_specific_dictionary)
-    print(taxon_specific_dictionary['80'])
     txt_output = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/' + input_name + '_taxon_specific_genes.txt'
     additional_layers_txt = None # '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/test_additional_layers.txt'
     save_taxon_specific_labels_to_txt(taxon_specific_dictionary, txt_output, additional_layers_txt)
