@@ -266,7 +266,7 @@ def tests():
     print(taxon_specific_dictionary_alt)
     txt_output = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/' + input_name + '_taxon_specific_genes_alt.txt'
     additional_layers_txt = None
-    save_taxon_specific_labels_to_txt(taxon_specific_dictionary, txt_output, additional_layers_txt)
+    save_taxon_specific_labels_to_txt(taxon_specific_dictionary_alt, txt_output, additional_layers_txt)
 
     sample_information_txt = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/' + input_name + \
                              '_sample_information_alt.txt'
