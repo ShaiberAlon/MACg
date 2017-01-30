@@ -48,17 +48,17 @@ def alternative_algorithm(data, alpha=0.5, beta=1):
     Ns = len(data[0])
     Ngenes = len(data)
     # Initialize list of TS (Taxon Specific genes)
-    TS = range(Ngenes)
+    taxon_specific_genes = range(Ngenes)
     # Initialize list of positive/negative samples
     sample_detection = np.ones(Ns)
     converged = False
-    Loss = None
+    loss = None
     while not converged:
         # mean of coverage of all TS genes in each sample
-        mean = np.mean(data[TS,], axis=0)  # calculating the mean along the columns
+        mean = np.mean(data[taxon_specific_genes,], axis=0)  # calculating the mean along the columns
 
         # determining the detection of the Genome in each sample
-        detection_portion = sum(np.abs(np.abs(data[TS,]-mean)-3*np.sqrt(np.var(data[TS,],axis=0))))
+        detection_portion = sum(np.abs(np.abs(data[taxon_specific_genes,]-mean)-3*np.sqrt(np.var(data[taxon_specific_genes,],axis=0))))
         for sample in range(Ns):
             if detection_portion[sample] >= alpha * Ngenes:
                 sample_detection[sample] = 1
@@ -70,13 +70,22 @@ def alternative_algorithm(data, alpha=0.5, beta=1):
         v = np.var(data[:, positive_samples] / mean[positive_samples], axis=1)
 
         # classifying genes (TS or NTS)
-        # if v[gene_id]
+        taxon_specific_genes = []
+        for gene_id in range(Ngenes):
+            if v[gene_id] <= beta:
+                taxon_specific_genes.append(gene_id)
+
+        # calculating the loss function
+        number_of_NTS = Ngenes - len(taxon_specific_genes)
+        new_loss = beta * number_of_NTS + sum(v[taxon_specific_genes])
 
         # Check convergence
-        if Loss is None:
-            # calculating the loss functionfor the first time
-            Loss = beta
+        if loss is not None:
+            if new_loss >= loss:
+                converged = True
+        loss = new_loss
 
+    return taxon_specific_genes, positive_samples
 
 def get_taxon_specific_candidates(data, positive_samples_list, gene_detection_matrix, gamma=10):
     # Find the taxon specific candidate genes in each sample
@@ -151,13 +160,13 @@ def get_taxon_specific_labels_from_taxon_specific_candidates_matrix(taxon_specif
             taxon_specific_genes.append(gene_number)
     return taxon_specific_genes
 
+
 def gen_taxon_specific_dictionary_from_list(taxon_specific_genes,gene_callers_id_dictionary):
     taxon_specific_dictionary = dict(zip(gene_callers_id_dictionary.values(),['NTS'] * len(
         gene_callers_id_dictionary)))
     for gene_id in taxon_specific_genes:
         taxon_specific_dictionary[gene_callers_id_dictionary[gene_id]] = 'TS'
     return taxon_specific_dictionary
-
 
 
 def save_tabular_to_txt(dictionary, new_txt_output, first_column_title, additional_columns_title,
@@ -245,5 +254,7 @@ def tests():
     old_sample_information =  None
     save_sample_detection_information_to_sample_information_file(positive_samples_list, sample_name_dictionary,
                                                                  sample_information_txt,old_sample_information)
+
+    # 
 if __name__ == '__main__':
     tests()
