@@ -15,8 +15,8 @@ def get_data_from_txt_file(file_name):
         sample_name_dictionary[i-1] = data_list[0][i]
 
     gene_callers_id_dictionary = {}
-    for i in range(1,Ngenes):
-        gene_callers_id_dictionary[i-1] = data_list[i][0]
+    for i in range(0,Ngenes):
+        gene_callers_id_dictionary[i] = data_list[i+1][0]
 
     data = np.loadtxt(file_name, delimiter='\t', skiprows=1, usecols=range(1, Nsamples + 1))
     return(data, sample_name_dictionary, gene_callers_id_dictionary)
@@ -66,12 +66,13 @@ def alternative_algorithm(data, alpha=0.5, beta=1):
                 sample_detection[sample] = 0
 
         # calculate adjusted variance of each gene (adjusted variance is just a name I made-up for this term
-        positive_samples = np.nonzero(sample_detection)
+        positive_samples = np.nonzero(sample_detection)[0]
         v = np.var(data[:, positive_samples] / mean[positive_samples], axis=1)
 
         # classifying genes (TS or NTS)
         taxon_specific_genes = []
         for gene_id in range(Ngenes):
+            print(v[gene_id])
             if v[gene_id] <= beta:
                 taxon_specific_genes.append(gene_id)
 
@@ -164,6 +165,7 @@ def get_taxon_specific_labels_from_taxon_specific_candidates_matrix(taxon_specif
 def gen_taxon_specific_dictionary_from_list(taxon_specific_genes,gene_callers_id_dictionary):
     taxon_specific_dictionary = dict(zip(gene_callers_id_dictionary.values(),['NTS'] * len(
         gene_callers_id_dictionary)))
+    print(gene_callers_id_dictionary)
     for gene_id in taxon_specific_genes:
         taxon_specific_dictionary[gene_callers_id_dictionary[gene_id]] = 'TS'
     return taxon_specific_dictionary
@@ -224,37 +226,54 @@ def tests():
     input_name = 'p214_Bfrag_positive_with_M_GG_gene_coverage'
     input_data = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/' + input_name + '.txt'
     data, sample_name_dictionary, gene_callers_id_dictionary = get_data_from_txt_file(input_data)
+    print(data.shape)
+    # # get the positive samples
+    # positive_samples_list , gene_detection_matrix = get_positive_samples(data)
+    # print('The number of positive samples is %s'%len(positive_samples_list))
+    # negative_samples = get_negative_samples(positive_samples_list,sample_name_dictionary)
+    # print('The following samples are negative: %s' % ([sample_name_dictionary[key] for key in negative_samples]))
+    # # testing get_taxon_specific_candidates
+    # taxon_specific_candidates_matrix = get_taxon_specific_candidates(data, positive_samples_list, gene_detection_matrix)
+    # print(len(taxon_specific_candidates_matrix))
+    # print(len(np.nonzero(taxon_specific_candidates_matrix)[0]))
+    #
+    # # testing get_taxon_specific_labels_from_taxon_specific_candidates_matrix
+    # taxon_specific_genes = get_taxon_specific_labels_from_taxon_specific_candidates_matrix(
+    #     taxon_specific_candidates_matrix, gene_detection_matrix, eta=0.8)
+    # print(taxon_specific_genes)
+    # print(len(taxon_specific_genes))
+    #
+    # # save the results
+    # taxon_specific_dictionary = gen_taxon_specific_dictionary_from_list(taxon_specific_genes,
+    #                                                                     gene_callers_id_dictionary)
+    # print(taxon_specific_dictionary)
+    # txt_output = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/' + input_name + '_taxon_specific_genes.txt'
+    # additional_layers_txt = None # '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/test_additional_layers.txt'
+    # save_taxon_specific_labels_to_txt(taxon_specific_dictionary, txt_output, additional_layers_txt)
+    #
+    # sample_information_txt = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/' + input_name + \
+    #                          '_sample_information.txt'
+    # old_sample_information =  None
+    # save_sample_detection_information_to_sample_information_file(positive_samples_list, sample_name_dictionary,
+    #                                                              sample_information_txt,old_sample_information)
 
-    # get the positive samples
-    positive_samples_list , gene_detection_matrix = get_positive_samples(data)
-    print('The number of positive samples is %s'%len(positive_samples_list))
-    negative_samples = get_negative_samples(positive_samples_list,sample_name_dictionary)
-    print('The following samples are negative: %s' % ([sample_name_dictionary[key] for key in negative_samples]))
-    # testing get_taxon_specific_candidates
-    taxon_specific_candidates_matrix = get_taxon_specific_candidates(data, positive_samples_list, gene_detection_matrix)
-    print(len(taxon_specific_candidates_matrix))
-    print(len(np.nonzero(taxon_specific_candidates_matrix)[0]))
-
-    # testing get_taxon_specific_labels_from_taxon_specific_candidates_matrix
-    taxon_specific_genes = get_taxon_specific_labels_from_taxon_specific_candidates_matrix(
-        taxon_specific_candidates_matrix, gene_detection_matrix, eta=0.8)
-    print(taxon_specific_genes)
-    print(len(taxon_specific_genes))
+    # running the alternative algorithm
+    taxon_specific_genes_alt, positive_samples_list_alt = alternative_algorithm(data, alpha=0.5, beta=1)
 
     # save the results
-    taxon_specific_dictionary = gen_taxon_specific_dictionary_from_list(taxon_specific_genes,
+    taxon_specific_dictionary_alt = gen_taxon_specific_dictionary_from_list(taxon_specific_genes_alt,
                                                                         gene_callers_id_dictionary)
-    print(taxon_specific_dictionary)
-    txt_output = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/' + input_name + '_taxon_specific_genes.txt'
-    additional_layers_txt = None # '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/test_additional_layers.txt'
+    print(taxon_specific_dictionary_alt)
+    txt_output = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/' + input_name + '_taxon_specific_genes_alt.txt'
+    additional_layers_txt = None
     save_taxon_specific_labels_to_txt(taxon_specific_dictionary, txt_output, additional_layers_txt)
 
     sample_information_txt = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/' + input_name + \
-                             '_sample_information.txt'
+                             '_sample_information_alt.txt'
     old_sample_information =  None
-    save_sample_detection_information_to_sample_information_file(positive_samples_list, sample_name_dictionary,
+    save_sample_detection_information_to_sample_information_file(positive_samples_list_alt, sample_name_dictionary,
                                                                  sample_information_txt,old_sample_information)
 
-    # 
+
 if __name__ == '__main__':
     tests()
