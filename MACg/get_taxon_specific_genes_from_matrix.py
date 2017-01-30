@@ -48,7 +48,7 @@ def alternative_algorithm(data, alpha=0.5, beta=1):
     Ns = len(data[0])
     Ngenes = len(data)
     # Initialize list of TS (Taxon Specific genes)
-    taxon_specific_genes = range(Ngenes)
+    taxon_specific_genes = np.random.choice(range(Ngenes), size=round(0.8*Ngenes)) #range(Ngenes)
     # Initialize list of positive/negative samples
     sample_detection = np.ones(Ns)
     converged = False
@@ -58,9 +58,12 @@ def alternative_algorithm(data, alpha=0.5, beta=1):
         mean = np.mean(data[taxon_specific_genes,], axis=0)  # calculating the mean along the columns
 
         # determining the detection of the Genome in each sample
-        detection_portion = sum(np.abs(np.abs(data[taxon_specific_genes,]-mean)-3*np.sqrt(np.var(data[taxon_specific_genes,],axis=0))))
+        detection_portion = (np.abs(np.abs(data[taxon_specific_genes,]-mean)-3*np.sqrt(np.var(data[
+                                                                                                     taxon_specific_genes,],axis=0)))>=0)
         for sample in range(Ns):
-            if detection_portion[sample] >= alpha * Ngenes:
+            number_of_detected_genes = sum(detection_portion[:, sample])
+            print('the number of genes detected in sample %s is %s' % (sample, sum(detection_portion[:, sample])))
+            if sum(detection_portion[:, sample]) >= alpha * Ngenes:
                 sample_detection[sample] = 1
             else:
                 sample_detection[sample] = 0
@@ -72,17 +75,19 @@ def alternative_algorithm(data, alpha=0.5, beta=1):
         # classifying genes (TS or NTS)
         taxon_specific_genes = []
         for gene_id in range(Ngenes):
-            print(v[gene_id])
             if v[gene_id] <= beta:
                 taxon_specific_genes.append(gene_id)
 
+        print('The number of taxon specific genes is %s ' % len(taxon_specific_genes))
         # calculating the loss function
         number_of_NTS = Ngenes - len(taxon_specific_genes)
         new_loss = beta * number_of_NTS + sum(v[taxon_specific_genes])
 
         # Check convergence
+        epsilon = 1
+        print('the new loss is %s' % new_loss)
         if loss is not None:
-            if new_loss >= loss:
+            if abs(new_loss - loss) < epsilon:
                 converged = True
         loss = new_loss
 
