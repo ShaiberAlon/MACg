@@ -53,35 +53,38 @@ def alternative_algorithm(data, alpha=0.5, beta=1):
     sample_detection = np.ones(Ns)
     converged = False
     loss = None
+    variance_of_genes = np.zeros(Ngenes)
     while not converged:
         # mean of coverage of all TS genes in each sample
-        mean = np.mean(data[taxon_specific_genes,], axis=0)  # calculating the mean along the columns
+        mean_in_sample = np.mean(data[taxon_specific_genes,], axis=0)  # calculating the mean along the columns
 
-        # determining the detection of the Genome in each sample
-        detection_portion = (np.abs(np.abs(data[taxon_specific_genes,]-mean)-3*np.sqrt(np.var(data[
-                                                                                                     taxon_specific_genes,],axis=0)))>=0)
+        # determining the detection of the genes in each sample
+        detected_genes = (np.abs(np.abs(data[:,]-mean_in_sample)-3*np.sqrt(np.var(data[taxon_specific_genes,],axis=0)))>=0)
+        print(detected_genes.shape)
         for sample in range(Ns):
-            number_of_detected_genes = sum(detection_portion[:, sample])
-            print('the number of genes detected in sample %s is %s' % (sample, sum(detection_portion[:, sample])))
-            if sum(detection_portion[:, sample]) >= alpha * Ngenes:
+            number_of_detected_genes = sum(detected_genes[:, sample])
+            print('the number of genes detected in sample %s is %s' % (sample, number_of_detected_genes))
+            if number_of_detected_genes >= alpha * Ngenes:
                 sample_detection[sample] = 1
             else:
                 sample_detection[sample] = 0
 
         # calculate adjusted variance of each gene (adjusted variance is just a name I made-up for this term
         positive_samples = np.nonzero(sample_detection)[0]
-        v = np.var(data[:, positive_samples] / mean[positive_samples], axis=1)
-
+        for gene_id in range(Ngenes):
+            # taking into considiration only positive samples that also contain this specific gene
+            samples_with_gene = np.nonzero(np.multiply(sample_detection,detected_genes[gene_id,:]))
+            variance_of_genes[gene_id] = np.var(data[gene_id, samples_with_gene] / mean_in_sample[samples_with_gene], axis=1)
         # classifying genes (TS or NTS)
         taxon_specific_genes = []
         for gene_id in range(Ngenes):
-            if v[gene_id] <= beta:
+            if variance_of_genes[gene_id] <= beta:
                 taxon_specific_genes.append(gene_id)
 
         print('The number of taxon specific genes is %s ' % len(taxon_specific_genes))
         # calculating the loss function
         number_of_NTS = Ngenes - len(taxon_specific_genes)
-        new_loss = beta * number_of_NTS + sum(v[taxon_specific_genes])
+        new_loss = beta * number_of_NTS + sum(variance_of_genes[taxon_specific_genes])
 
         # Check convergence
         epsilon = 1
