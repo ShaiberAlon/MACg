@@ -72,7 +72,6 @@ def alternative_algorithm(data, alpha=0.5, beta=1):
         # classifying genes (TS or NTS)
         taxon_specific_genes = []
         for gene_id in range(Ngenes):
-            print(v[gene_id])
             if v[gene_id] <= beta:
                 taxon_specific_genes.append(gene_id)
 
@@ -139,7 +138,7 @@ def get_taxon_specific_candidates(data, positive_samples_list, gene_detection_ma
 
 
 def get_taxon_specific_labels_from_taxon_specific_candidates_matrix(taxon_specific_candidates_matrix,
-                                                                    gene_detection_matrix, eta=0.5):
+                                                                    gene_detection_matrix, eta=0.8):
     # Decide which genes are taxon specific according to a majority vote
     # input:
     #     taxon_specific_candidates_matrix
@@ -287,13 +286,11 @@ def tests():
     # testing get_taxon_specific_labels_from_taxon_specific_candidates_matrix
     taxon_specific_genes = get_taxon_specific_labels_from_taxon_specific_candidates_matrix(
         taxon_specific_candidates_matrix, gene_detection_matrix, eta=0.8)
-    print(taxon_specific_genes)
     print('The number of taxon specific genes is: %s ' % len(taxon_specific_genes))
 
     # save the results
     taxon_specific_dictionary = gen_taxon_specific_dictionary_from_list(taxon_specific_genes,
                                                                         gene_callers_id_dictionary)
-    print(taxon_specific_dictionary)
     txt_output = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/' + input_name + '_taxon_specific_genes.txt'
     additional_layers_txt = None # '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/test_additional_layers.txt'
     save_taxon_specific_labels_to_txt(taxon_specific_dictionary, txt_output, additional_layers_txt)
@@ -311,7 +308,9 @@ def tests():
     gene_classes_dictionary = get_gene_classes_dictionary(taxon_specific_dictionary, accessory_genes, gene_callers_id_dictionary)
     txt_output = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/' + input_name + '_additional_layers.txt'
     additional_layers_txt = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/' + input_name + '_taxon_specific_genes.txt'
-    save_taxon_specific_labels_to_txt(gene_classes_dictionary, txt_output, additional_layers_txt)
+    save_tabular_to_txt(gene_classes_dictionary, txt_output, 'gene_callers_id', ['gene_class'], additional_layers_txt)
+
+    # save_
 
     # # running the alternative algorithm
     # taxon_specific_genes_alt, positive_samples_list_alt = alternative_algorithm(data, alpha=0.5, beta=1)
