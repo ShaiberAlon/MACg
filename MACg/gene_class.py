@@ -56,7 +56,19 @@ def get_detection_of_genes(data, samples, mean_coverage_in_samples, std_in_sampl
     return detection_of_genes
 
 
-def get_gene_classes(data, samples, alpha=0.05, beta=0.5, gamma=3):
+def get_detection_of_genome_in_samples(detection_of_genes, samples, alpha):
+    detection_of_genome_in_samples = {}
+    for sample_id in samples:
+        number_of_detected_genes_in_sample = len([gene_id for gene_id in detection_of_genes if detection_of_genes[
+            gene_id][sample_id]])
+        print(number_of_detected_genes_in_sample)
+        detection_of_genome_in_samples[sample_id] = number_of_detected_genes_in_sample > alpha * len(
+            detection_of_genes)
+        print(alpha * len(detection_of_genes))
+        print(detection_of_genome_in_samples[sample_id])
+    return detection_of_genome_in_samples
+
+def get_gene_classes(data, samples, alpha, beta, gamma):
     """ returning the classification per gene along with detection in samples (i.e. for each sample, whether the
     genome has been detected in the sample or not """
     taxon_specific_genes = None
@@ -65,22 +77,24 @@ def get_gene_classes(data, samples, alpha=0.05, beta=0.5, gamma=3):
     while not converged:
         # mean of coverage of all TS genes in each sample
         mean_coverage_in_samples = get_mean_coverage_in_samples(data,samples,taxon_specific_genes)
-        detection_portion = get_detection_portion(data, samples, mean_coverage_in_samples, gamma)
+        std_in_samples = get_std_in_samples(data, samples)
+        detection_of_genes = get_detection_of_genes(data, samples, mean_coverage_in_samples, std_in_samples, gamma)
+        detection_of_genome_in_samples = get_detection_of_genome_in_samples(detection_of_genes, alpha)
         converged = True
     pass
 
 
-def main(file_path, alpha=0.05, beta=0.5, gamma=3):
+def main(file_path, alpha=0.5, beta=1, gamma=3):
     data, samples = get_data_from_txt_file(file_path)
-    data = temptest(data)
-    print(data)
-    print(samples)
+    print('Loaded data from these samples: %s' % samples)
     mean_coverage_in_samples = get_mean_coverage_in_samples(data, samples)
     print(mean_coverage_in_samples)
     std_in_samples = get_std_in_samples(data,samples)
     print(std_in_samples)
     detection_of_genes = get_detection_of_genes(data, samples, mean_coverage_in_samples, std_in_samples, gamma)
     print(detection_of_genes)
+    detection_of_genome_in_samples = get_detection_of_genome_in_samples(detection_of_genes, samples, alpha)
+    print(detection_of_genome_in_samples)
 
 
 if __name__ == '__main__':
