@@ -2,6 +2,10 @@
 # pylint: disable=line-too-long
 import csv
 import numpy as np
+import sys
+import os
+import anvio.utils as utils
+
 
 
 def get_data_from_txt_file(file_name):
@@ -36,10 +40,13 @@ def get_positive_samples(data,alpha=0.05,beta=0.5):
     for sample_number in range(len(data[0])):
         # getting the median of the non-zero coverage values for
         median_value = np.median(data[np.nonzero(data[:,sample_number]),sample_number])
-        gene_detection_matrix[:,sample_number] = data[:,sample_number] > alpha * median_value
+        gene_detection_matrix[:,sample_number] = data[:, sample_number] > alpha * median_value
+        print('sample %s max detection: real max: '% (sample_number))
+        print(data[np.nonzero(gene_detection_matrix[:,sample_number]),sample_number][0])
+        print(max(data[np.nonzero(gene_detection_matrix[:,sample_number])][0]))
+        print(max(data[:,sample_number]))
         if sum(gene_detection_matrix[:,sample_number]) > beta * Ngenes:
             positive_samples_list.append(sample_number)
-
     return positive_samples_list, gene_detection_matrix
 
 
@@ -101,17 +108,24 @@ def get_taxon_specific_candidates(data, positive_samples_list, gene_detection_ma
 
     for sample_number in positive_samples_list:
         converged = False
-        gene_number = 1
+
         # approximation of the median value (only of detected genes):
         detected_genes = np.nonzero(gene_detection_matrix[:,sample_number])
-        median_coverage_index = np.argsort(data[detected_genes,sample_number][0])[len(detected_genes)//2]
-        median_coverage = data[median_coverage_index,sample_number]
+        median_coverage = np.median()
+        median_coverage_index = np.argsort(data[detected_genes, sample_number][0])[detected_genes[0][len(
+            detected_genes[0])//2]]
+        print('this: %s' % detected_genes[0][len(
+            detected_genes[0])//2])
+        print(data[detected_genes, sample_number][0])
+        print(np.argsort(data[detected_genes, sample_number][0]))
+        median_coverage = data[median_coverage_index, sample_number]
         sorted_indexes = np.argsort(np.absolute(data[:, sample_number] - median_coverage))
         print('sample number %s, the median value is %s in index number %s' % (sample_number, median_coverage, median_coverage_index))
         print('the sorted indexes: %s' % sorted_indexes)
         var = 0
         mean = median_coverage
         cluster = {'gene_ids': [median_coverage_index], 'gene_coverages': [median_coverage]}
+        gene_number = 1
         while not converged and gene_number < Ngenes:
             new_gene_number = sorted_indexes[gene_number]
             new_gene_coverage = data[new_gene_number, sample_number]
@@ -132,7 +146,7 @@ def get_taxon_specific_candidates(data, positive_samples_list, gene_detection_ma
             gene_number += 1
         # setting the value of the genes in the cluster as 1
         taxon_specific_candidates_matrix[cluster['gene_ids'], sample_number] = True
-
+    # print(adfasdf)
     return taxon_specific_candidates_matrix
 
 
