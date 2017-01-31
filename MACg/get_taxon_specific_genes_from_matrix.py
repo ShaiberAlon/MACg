@@ -175,12 +175,41 @@ def get_accessory_genes(data, taxon_specific_genes, positive_samples, a=3):
         gene_detection[:, sample] = np.logical_and(data[:, sample] - mean_of_TS_coverage > -a * std_of_TS_coverage,
                                                    data[:,sample] > 0)
         print(np.sum(gene_detection[:,sample]))
-    print(gene_detection)
-    print(gene_detection.shape)
 
+    # array showing in how many samples the gene is detected
+    gene_detection_layer = np.sum(gene_detection,axis=1)
+
+    accessory_genes = np.zeros(Ngenes)
+    for gene_id in range(Ngenes):
+        if gene_detection_layer[gene_id] > 0.9 * len(positive_samples):
+            accessory_genes[gene_id] = 0
+        else:
+            accessory_genes[gene_id] = 1
+
+    return gene_detection_layer, accessory_genes
     # generating the detection layer for the genes
     # TODO: delete this line:
     # print('shape of mean_of_TS_coverage %s' % mean_of_TS_coverage.shape)
+
+
+def get_gene_classes_dictionary(taxon_specific_dictionary, accessory_genes, gene_callers_id_dictionary):
+    from gen_mock_data import gene_class_id_dictionary_reverese
+    gene_classes_dictionary = {}
+    for gene_id in gene_callers_id_dictionary.keys():
+        if taxon_specific_dictionary[gene_callers_id_dictionary[gene_id]] == 'TS' and accessory_genes[gene_id] == 0:
+            # Taxon specific core
+            gene_classes_dictionary[gene_callers_id_dictionary[gene_id]] = gene_class_id_dictionary_reverese[1]
+        elif taxon_specific_dictionary[gene_callers_id_dictionary[gene_id]] == 'TS' and accessory_genes[gene_id] == 1:
+            # Taxon specific accessory
+            gene_classes_dictionary[gene_callers_id_dictionary[gene_id]] = gene_class_id_dictionary_reverese[3]
+        elif taxon_specific_dictionary[gene_callers_id_dictionary[gene_id]] == 'NTS' and accessory_genes[gene_id] == 0:
+            # Non taxon specific core
+            gene_classes_dictionary[gene_callers_id_dictionary[gene_id]] = gene_class_id_dictionary_reverese[4]
+        elif taxon_specific_dictionary[gene_callers_id_dictionary[gene_id]] == 'NTS' and accessory_genes[gene_id] == 1:
+            # Non taxon specific accessory
+            gene_classes_dictionary[gene_callers_id_dictionary[gene_id]] = gene_class_id_dictionary_reverese[5]
+
+    return gene_classes_dictionary
 
 
 def gen_taxon_specific_dictionary_from_list(taxon_specific_genes,gene_callers_id_dictionary):
@@ -279,8 +308,14 @@ def tests():
                                                                  sample_information_txt,old_sample_information)
 
     # test get_accessory_genes(data, taxon_specific_genes, positive_samples)
-    get_accessory_genes(data, taxon_specific_genes, positive_samples_list)
-    #
+    gene_detection_layer, accessory_genes = get_accessory_genes(data, taxon_specific_genes, positive_samples_list)
+
+    # get_gene_classes
+    gene_classes_dictionary = get_gene_classes_dictionary(taxon_specific_dictionary, accessory_genes, gene_callers_id_dictionary)
+    txt_output = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/' + input_name + '_additional_layers.txt'
+    additional_layers_txt = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/' + input_name + '_taxon_specific_genes.txt'
+    save_taxon_specific_labels_to_txt(gene_classes_dictionary, txt_output, additional_layers_txt)
+
     # # running the alternative algorithm
     # taxon_specific_genes_alt, positive_samples_list_alt = alternative_algorithm(data, alpha=0.5, beta=1)
     #
