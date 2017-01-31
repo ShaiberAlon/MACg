@@ -187,9 +187,6 @@ def get_accessory_genes(data, taxon_specific_genes, positive_samples, a=3):
             accessory_genes[gene_id] = 1
 
     return gene_detection_layer, accessory_genes
-    # generating the detection layer for the genes
-    # TODO: delete this line:
-    # print('shape of mean_of_TS_coverage %s' % mean_of_TS_coverage.shape)
 
 
 def get_gene_classes_dictionary(taxon_specific_dictionary, accessory_genes, gene_callers_id_dictionary):
