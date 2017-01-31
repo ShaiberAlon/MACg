@@ -61,12 +61,37 @@ def get_detection_of_genome_in_samples(detection_of_genes, samples, alpha):
     for sample_id in samples:
         number_of_detected_genes_in_sample = len([gene_id for gene_id in detection_of_genes if detection_of_genes[
             gene_id][sample_id]])
-        print(number_of_detected_genes_in_sample)
         detection_of_genome_in_samples[sample_id] = number_of_detected_genes_in_sample > alpha * len(
             detection_of_genes)
-        print(alpha * len(detection_of_genes))
-        print(detection_of_genome_in_samples[sample_id])
     return detection_of_genome_in_samples
+
+
+def get_adjusted_std_for_gene_id(data, gene_id, samples, mean_coverage_in_samples, detection_of_genes):
+    """Returns the adjusted standard deviation for a gene_id """
+    # Note: originally I thought I would only consider samples in which the genome was detected, but in fact,
+    # if a gene is detected in a sample in which the genome is not detected then that is a good sign that this is
+    #  a NTS gene. But I still kept here the original definition of adjusted_std
+    # adjusted_std = np.std([d[gene_id, sample_id] / mean_coverage_in_samples[sample_id] for sample_id in samples if (
+        #         detection_of_genes[gene_id][sample_id] and detection_of_genome_in_samples[sample_id])])
+    adjusted_std = np.std([data[gene_id][sample_id]/mean_coverage_in_samples[sample_id] for sample_id in samples if (
+                detection_of_genes[gene_id][sample_id])])
+    return adjusted_std
+
+
+def get_taxon_specificity(data, samples, mean_coverage_in_samples,
+                                                detection_of_genome_in_samples, detection_of_genes, beta):
+    """For each gene if the adjusted standard deviation (to understand what this is refer to Alon Shaiber) is smaller
+    than beta the the gene is a taxon-specific gene (TS), otherwise, it is a non-taxon-specific gene (NTS)"""
+    taxon_specificity = {}
+    for gene_id in data:
+        adjusted_std = get_adjusted_std_for_gene_id(data, gene_id, samples, mean_coverage_in_samples,
+                                                    detection_of_genes)
+        if adjusted_std < beta:
+            taxon_specificity[gene_id] = 'TS'
+        else:
+            taxon_specificity[gene_id] = 'NTS'
+    pass
+
 
 def get_gene_classes(data, samples, alpha, beta, gamma):
     """ returning the classification per gene along with detection in samples (i.e. for each sample, whether the
@@ -80,6 +105,9 @@ def get_gene_classes(data, samples, alpha, beta, gamma):
         std_in_samples = get_std_in_samples(data, samples)
         detection_of_genes = get_detection_of_genes(data, samples, mean_coverage_in_samples, std_in_samples, gamma)
         detection_of_genome_in_samples = get_detection_of_genome_in_samples(detection_of_genes, alpha)
+        taxon_specificity = get_taxon_specificity(data, samples, mean_coverage_in_samples,
+                                                detection_of_genome_in_samples, detection_of_genes, beta)
+
         converged = True
     pass
 
@@ -95,6 +123,10 @@ def main(file_path, alpha=0.5, beta=1, gamma=3):
     print(detection_of_genes)
     detection_of_genome_in_samples = get_detection_of_genome_in_samples(detection_of_genes, samples, alpha)
     print(detection_of_genome_in_samples)
+    for gene_id in data:
+        print('gene_id %s: adjasted_std: %s' % (gene_id,get_adjusted_std_for_gene_id(data, gene_id, samples,
+                                                                       mean_coverage_in_samples,
+                                                   detection_of_genes)))
 
 
 if __name__ == '__main__':
