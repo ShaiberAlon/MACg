@@ -104,8 +104,7 @@ def get_taxon_specific_candidates(data, positive_samples_list, gene_detection_ma
         gene_number = 1
         # approximation of the median value (only of detected genes):
         detected_genes = np.nonzero(gene_detection_matrix[:,sample_number])
-        median_coverage_index = np.argsort(data[detected_genes,sample_number][0])[len(
-            data[detected_genes,sample_number])//2]
+        median_coverage_index = np.argsort(data[detected_genes,sample_number][0])[len(detected_genes)//2]
         median_coverage = data[median_coverage_index,sample_number]
         sorted_indexes = np.argsort(np.absolute(data[:, sample_number] - median_coverage))
         print('sample number %s, the median value is %s in index number %s' % (sample_number, median_coverage, median_coverage_index))
