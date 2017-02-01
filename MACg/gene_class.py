@@ -78,14 +78,20 @@ def get_adjusted_std_for_gene_id(data, gene_id, samples, mean_coverage_in_sample
     return adjusted_std
 
 
-def get_taxon_specificity(data, samples, mean_coverage_in_samples, detection_of_genes, beta):
+def get_adjusted_stds(data, samples, mean_coverage_in_samples, detection_of_genes):
+    adjusted_std = {}
+    for gene_id in data:
+        adjusted_std[gene_id] = get_adjusted_std_for_gene_id(data, gene_id, samples, mean_coverage_in_samples,
+                                                             detection_of_genes)
+    return adjusted_std
+
+
+def get_taxon_specificity(adjusted_stds, beta):
     """For each gene if the adjusted standard deviation (to understand what this is refer to Alon Shaiber) is smaller
     than beta the the gene is a taxon-specific gene (TS), otherwise, it is a non-taxon-specific gene (NTS)"""
     taxon_specificity = {}
-    for gene_id in data:
-        adjusted_std = get_adjusted_std_for_gene_id(data, gene_id, samples, mean_coverage_in_samples,
-                                                    detection_of_genes)
-        if adjusted_std < beta:
+    for gene_id in adjusted_stds:
+        if adjusted_stds[gene_id] < beta:
             taxon_specificity[gene_id] = 'TS'
         else:
             taxon_specificity[gene_id] = 'NTS'
@@ -104,8 +110,9 @@ def get_gene_classes(data, samples, alpha, beta, gamma):
         std_in_samples = get_std_in_samples(data, samples)
         detection_of_genes = get_detection_of_genes(data, samples, mean_coverage_in_samples, std_in_samples, gamma)
         detection_of_genome_in_samples = get_detection_of_genome_in_samples(detection_of_genes, alpha)
-        taxon_specificity = get_taxon_specificity(data, samples, mean_coverage_in_samples, detection_of_genes, beta)
-
+        adjusted_stds = get_adjusted_stds(data,samples,mean_coverage_in_samples,detection_of_genes)
+        taxon_specificity = get_taxon_specificity(adjusted_stds,beta)
+        loss = get_loss_function()
         converged = True
     pass
 
@@ -137,7 +144,8 @@ def check_results_for_mock_data(input_name, alpha=0.5, beta=1, gamma=3):
         print('gene_id %s: adjasted_std: %s' % (gene_id, get_adjusted_std_for_gene_id(data, gene_id, samples,
                                                                                       mean_coverage_in_samples,
                                                                                       detection_of_genes)))
-    taxon_specificity = get_taxon_specificity(data, samples, mean_coverage_in_samples, detection_of_genes, beta)
+    adjusted_stds = get_adjusted_stds(data, samples, mean_coverage_in_samples, detection_of_genes)
+    taxon_specificity = get_taxon_specificity(adjusted_stds, beta)
     print(taxon_specificity)
 
     ## comparing the specificity classification to the actual classification
