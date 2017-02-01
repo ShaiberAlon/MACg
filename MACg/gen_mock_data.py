@@ -157,7 +157,8 @@ def gen_gene_abundance_from_group_abundance_table(group_abundance_table, gene_gr
         gene_abundance_list.append(gene_abundance)
     gene_abundance_table = dict(zip(gene_group_table.keys(), gene_abundance_list))
     return gene_abundance_table
-
+from scipy.stats import norm
+a = norm.cdf(x=1,loc=0,scale=1)
 
 def gen_mock_merged_coverage_table(group_class_table, gene_group_table, number_of_samples=16):
     """ Takes a file name (of a genome_classes_table), and number of samples and generates the coverage table
@@ -209,8 +210,8 @@ def save_additional_layers_txt_from_gene_group_table(gene_group_table,output_fil
 
 def tests():
     genome_classes_table_filename = '../tests/sandbox/example_genome_classes_table.txt'
-    number_of_samples = 100
-
+    number_of_samples = 20
+    name = 'test_%s' % number_of_samples
     # test read_genome_classes_table
     genome_classes_table = read_genome_classes_table(genome_classes_table_filename)
     print('genome_classes_table is: %s' % genome_classes_table)
@@ -224,7 +225,7 @@ def tests():
     print('gene_group_table is: %s' % gene_group_table)
 
     # test save_gene_group_table_as_txt
-    gene_group_table_txt = '../tests/sandbox/test_gene_group_table.txt'
+    gene_group_table_txt = '../tests/sandbox/' + name + '_gene_group_table.txt'
     save_gene_group_table_as_txt(gene_group_table, gene_group_table_txt)
 
     # test gen_abundance_of_groups_in_sample
@@ -241,20 +242,22 @@ def tests():
     print('mock_merged_coverage_table is: %s' % mock_merged_coverage_table)
 
     # test save_mock_merged_coverage_table_as_txt
-    test_output='../tests/sandbox/test_output.txt'
+    test_output='../tests/sandbox/' + name + '_output.txt'
     save_mock_merged_coverage_table_as_txt(mock_merged_coverage_table, test_output)
-    test_output_transposed = '../tests/sandbox/test_output_transposed.txt'
+    test_output_transposed = '../tests/sandbox/' + name + '.txt'
     transpose_txt(test_output, test_output_transposed)
 
     # save an additional_layers file
-    additional_layers_txt = '../tests/sandbox/test_additional_layers.txt'
+    additional_layers_txt = '../tests/sandbox/' + name + '_additional_layers.txt'
     save_additional_layers_txt_from_gene_group_table(gene_group_table,additional_layers_txt)
 
 
-# Testing all methods
-tests()
+
 
 if __name__ == '__main__':
+    # Testing all methods
+    tests()
+
     import argparse
 
     parser = argparse.ArgumentParser(description='')
