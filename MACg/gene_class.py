@@ -263,7 +263,7 @@ def main(file_path, additional_layers_file, sample_information_txt, old_sample_i
 
 if __name__ == '__main__':
     import argparse
-    parser = argparse.ArgumentParser(description='')
+    parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--data', metavar='FILE', dest='input_file', help='input table of coverage values of '
                                                                                'genes in samples')
     parser.add_argument('-a', '--alpha', metavar='NUM', dest='alpha', type=float, default=0.5,
@@ -273,9 +273,12 @@ if __name__ == '__main__':
                              'This means that if the adjusted standard deviation of a gene is greater than beta, '
                              'then the gene will be classified as non-taxon-specific')
     parser.add_argument('-g', '--gamma', metavar='NUM', dest='gamma', type=float, default=3,
-                        help='number of standard deviation from the mean value of taxon specific ')
-    parser.add_argument('-a', '--alpha', metavar='NUM', dest='alpha', type=float, default=0.5,
-                        help='portion of STC genes required to decide a genome is detected in a sample')
+                        help='This is used to define detection of genes. It is the number of standard deviation below '
+                             'the mean value of the taxon specific genes for which a gene is still considered detected')
+    parser.add_argument('-e', '--eta', metavar='NUM', dest='eta', type=float, default=0.95,
+                        help='Treshold for deciding whether a gene is core or accessory (default is 0.95, hence if a '
+                             'gene is detected in at least 95% of the samples (in which the genome is detected) then '
+                             'it is considered core')
     parser.add_argument('-o', '--out', metavar='FILE', dest='output', help='Output file for classes information')
     parser.add_argument('-s', '--sample-detection', metavar='FILE', dest='sample_detection_output', help='Output file '
                                                                                    'for sample detection information')
