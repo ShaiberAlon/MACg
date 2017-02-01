@@ -162,13 +162,13 @@ def get_gene_classes(data, samples, alpha, beta, gamma, eta):
     STC_genes = None
     while not converged:
         # mean of coverage of all TS genes in each sample
-        mean_coverage_in_samples = get_mean_coverage_in_samples(data,samples,taxon_specific_genes)
+        mean_coverage_of_TS_in_samples = get_mean_coverage_in_samples(data,samples,taxon_specific_genes)
         std_in_samples = get_std_in_samples(data, samples)
-        detection_of_genes = get_detection_of_genes(data, samples, mean_coverage_in_samples, std_in_samples, gamma)
+        detection_of_genes = get_detection_of_genes(data, samples, mean_coverage_of_TS_in_samples, std_in_samples, gamma)
         detection_of_genome_in_samples = get_detection_of_genome_in_samples(detection_of_genes, samples, alpha, STC_genes)
         samples_with_genome = [sample_id for sample_id in samples if detection_of_genome_in_samples[sample_id][
             'detection']]
-        adjusted_stds = get_adjusted_stds(data,samples,mean_coverage_in_samples,detection_of_genes)
+        adjusted_stds = get_adjusted_stds(data,samples,mean_coverage_of_TS_in_samples,detection_of_genes)
         taxon_specificity = get_taxon_specificity(adjusted_stds,beta)
         new_loss = get_loss_function_value(taxon_specificity, adjusted_stds, beta)
         epsilon = 1.5 * beta
@@ -262,22 +262,32 @@ def main(file_path, additional_layers_file, sample_information_txt, old_sample_i
 
 
 if __name__ == '__main__':
-    # import argparse
-    # parser = argparse.ArgumentParser(description='')
-    # parser.add_argument('g', '--genome_classes_table', metavar='FILE', dest='genome_classes_table_filename',
-    #                     help='input genome class table')
-    # parser.add_argument('-N', '--number_of_samples', metavar='INT', dest='number_of_samples', type=int, default=16,
-    #                     help='Number of samples in the mock data')
-    # parser.add_argument('-o', '--out', metavar='FILE', dest='output', default='mock_coverage_data.txt',
-    #                     help='Output file')
+    import argparse
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('-d', '--data', metavar='FILE', dest='input_file', help='input table of coverage values of '
+                                                                               'genes in samples')
+    parser.add_argument('-a', '--alpha', metavar='NUM', dest='alpha', type=float, default=0.5,
+                        help='portion of STC genes required to decide a genome is detected in a sample')
+    parser.add_argument('-b', '--beta', metavar='NUM', dest='beta', type=float, default=1,
+                        help='Weight of the number of non-taxon-specific genes in the loss function (default = 1). '
+                             'This means that if the adjusted standard deviation of a gene is greater than beta, '
+                             'then the gene will be classified as non-taxon-specific')
+    parser.add_argument('-g', '--gamma', metavar='NUM', dest='gamma', type=float, default=3,
+                        help='number of standard deviation from the mean value of taxon specific ')
+    parser.add_argument('-a', '--alpha', metavar='NUM', dest='alpha', type=float, default=0.5,
+                        help='portion of STC genes required to decide a genome is detected in a sample')
+    parser.add_argument('-o', '--out', metavar='FILE', dest='output', help='Output file for classes information')
+    parser.add_argument('-s', '--sample-detection', metavar='FILE', dest='sample_detection_output', help='Output file '
+                                                                                   'for sample detection information')
     # parser.add_argument('--test', action='store_true', dest='test', help='test that everything is ok and exit')
-    # args = parser.parse_args()
+    args = parser.parse_args()
 
     # check_results_for_mock_data(input_name)
-    additional_layers_file = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/my_best_delete_me_so_far'
-    input_file = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/p214_Bfrag_positive_with_M_GG_gene_coverage.txt'
-    old_sample_information_txt = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox' \
-                              '/Bfrag_positive_samples_information.txt'
-    new_sample_information_txt = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox' \
-                              '/p214_Bfrag_positive_with_M_GG_gene_coverage_samples_information.txt'
-    main(input_file, additional_layers_file, new_sample_information_txt)
+    # additional_layers_file = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/my_best_delete_me_so_far'
+    # input_file = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/p214_Bfrag_positive_with_M_GG_gene_coverage.txt'
+    # old_sample_information_txt = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox' \
+    #                           '/Bfrag_positive_samples_information.txt'
+    # new_sample_information_txt = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox' \
+    #                           '/p214_Bfrag_positive_with_M_GG_gene_coverage_samples_information.txt'
+
+    main(args.input_file, args.output, args.sample_detection_output, args.alpha, args.beta, args.gamma, args.eta)
