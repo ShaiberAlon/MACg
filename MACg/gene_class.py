@@ -134,17 +134,17 @@ def get_core_accessory_info(detection_of_genes, gene_id, samples_with_genome, et
 def get_gene_class(taxon_specificity, core_or_accessory):
     if taxon_specificity == 'TS':
         if core_or_accessory == 'core':
-            return 'STC'
+            return 'TSC'
         elif core_or_accessory == 'accessory':
-            return 'TA'
+            return 'TSA'
         else:
             print('%s is not valid. Value should be \'core\' or \'accessory\'' % core_or_accessory)
             exit(1)
     elif taxon_specificity == 'NTS':
         if core_or_accessory == 'core':
-            return 'NTC'
+            return 'TNC'
         elif core_or_accessory == 'accessory':
-            return 'NTA'
+            return 'TNA'
         else:
             print('%s is not valid. Value should be \'core\' or \'accessory\'' % core_or_accessory)
             exit(1)
@@ -159,13 +159,13 @@ def get_gene_classes(data, samples, alpha, beta, gamma, eta):
     taxon_specific_genes = None
     converged = False
     loss = None
-    STC_genes = None
+    TSC_genes = None
     while not converged:
         # mean of coverage of all TS genes in each sample
         mean_coverage_of_TS_in_samples = get_mean_coverage_in_samples(data,samples,taxon_specific_genes)
         std_in_samples = get_std_in_samples(data, samples)
         detection_of_genes = get_detection_of_genes(data, samples, mean_coverage_of_TS_in_samples, std_in_samples, gamma)
-        detection_of_genome_in_samples = get_detection_of_genome_in_samples(detection_of_genes, samples, alpha, STC_genes)
+        detection_of_genome_in_samples = get_detection_of_genome_in_samples(detection_of_genes, samples, alpha, TSC_genes)
         samples_with_genome = [sample_id for sample_id in samples if detection_of_genome_in_samples[sample_id][
             'detection']]
         adjusted_stds = get_adjusted_stds(data,samples,mean_coverage_of_TS_in_samples,detection_of_genes)
@@ -189,10 +189,10 @@ def get_gene_classes(data, samples, alpha, beta, gamma, eta):
             gene_class_information[gene_id]['gene_class'] = get_gene_class(gene_class_information[gene_id][
                                                'gene_specificity'], gene_class_information[gene_id]['core_or_accessory'])
 
-        STC_genes = [gene_id for gene_id in gene_class_information if gene_class_information[gene_id][
-            'gene_class']=='STC']
+        TSC_genes = [gene_id for gene_id in gene_class_information if gene_class_information[gene_id][
+            'gene_class']=='TSC']
     final_detection_of_genome_in_samples = get_detection_of_genome_in_samples(detection_of_genes, samples, alpha,
-                                                                        genes_to_consider=STC_genes)
+                                                                        genes_to_consider=TSC_genes)
     return gene_class_information, final_detection_of_genome_in_samples
 
 def get_specificity_from_class_id(class_id):
@@ -251,15 +251,15 @@ def main(file_path, additional_layers_file, sample_information_txt, alpha=0.5, b
     a = lambda field, value : len([gene_id for gene_id in gene_class_information if gene_class_information[gene_id][
         field]==value])
     number_of_TS = a('gene_specificity','TS')
-    number_of_STC = a('gene_class','STC')
-    number_of_TA = a('gene_class','TA')
-    number_of_NTC = a('gene_class','NTC')
-    number_of_NTA = a('gene_class','NTA')
+    number_of_TSC = a('gene_class','TSC')
+    number_of_TSA = a('gene_class','TSA')
+    number_of_TNC = a('gene_class','TNC')
+    number_of_TNA = a('gene_class','TNA')
 
-    print('The number of TS is %s, and the number of STC is %s' % (number_of_TS, number_of_STC))
-    print('The number of TS is %s, and the number of TA is %s' % (number_of_TS, number_of_TA))
-    print('The number of TS is %s, and the number of NTC is %s' % (number_of_TS, number_of_NTC))
-    print('The number of TS is %s, and the number of NTA is %s' % (number_of_TS, number_of_NTA))
+    print('The number of TS is %s, and the number of TSC is %s' % (number_of_TS, number_of_TSC))
+    print('The number of TS is %s, and the number of TSA is %s' % (number_of_TS, number_of_TSA))
+    print('The number of TS is %s, and the number of TNC is %s' % (number_of_TS, number_of_TNC))
+    print('The number of TS is %s, and the number of TNA is %s' % (number_of_TS, number_of_TNA))
     utils.store_dict_as_TAB_delimited_file(gene_class_information, additional_layers_file,headers=['gene_callers_id',
                                                                                                    'gene_class', 'number_of_detections'])
     utils.store_dict_as_TAB_delimited_file(detection_of_genome_in_samples, sample_information_txt,
@@ -272,7 +272,7 @@ if __name__ == '__main__':
     # parser.add_argument('-d', '--data', metavar='FILE', dest='input_file', help='input table of coverage values of '
     #                                                                            'genes in samples')
     # parser.add_argument('-a', '--alpha', metavar='NUM', dest='alpha', type=float, default=0.5,
-    #                     help='portion of STC genes required to decide a genome is detected in a sample')
+    #                     help='portion of TSC genes required to decide a genome is detected in a sample')
     # parser.add_argument('-b', '--beta', metavar='NUM', dest='beta', type=float, default=1,
     #                     help='Weight of the number of non-taxon-specific genes in the loss function (default = 1). '
     #                          'This means that if the adjusted standard deviation of a gene is greater than beta, '
@@ -290,7 +290,7 @@ if __name__ == '__main__':
     # # parser.add_argument('--test', action='store_true', dest='test', help='test that everything is ok and exit')
     # args = parser.parse_args()
 
-    main(args.input_file, args.output, args.sample_detection_output, args.alpha, args.beta, args.gamma, args.eta)
+    # main(args.input_file, args.output, args.sample_detection_output, args.alpha, args.beta, args.gamma, args.eta)
     # # check_results_for_mock_data(input_name)
     additional_layers_file = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/my_best_delete_me_so_far'
     input_file = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/p214_Bfrag_positive_with_M_GG_gene_coverage.txt'
