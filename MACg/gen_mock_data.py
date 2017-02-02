@@ -4,7 +4,7 @@ import csv
 import random
 import numpy
 # dictionary to translate from class name to class_caller_id
-gene_class_id_dictionary = dict(NaN=0, STC=1, MTC=2, TA=3, NTC=4, NTA=5)
+gene_class_id_dictionary = dict(NaN=0, TSC=1, MTSC=2, TSA=3, TNC=4, TNA=5)
 gene_class_id_dictionary_reverese = dict(zip(gene_class_id_dictionary.values(),gene_class_id_dictionary.keys()))
 
 
