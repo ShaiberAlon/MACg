@@ -259,10 +259,11 @@ def main(file_path, additional_layers_file, sample_information_txt, alpha, beta,
     number_of_TNC = a('gene_class','TNC')
     number_of_TNA = a('gene_class','TNA')
 
-    print('The number of TS is %s, and the number of TSC is %s' % (number_of_TS, number_of_TSC))
-    print('The number of TS is %s, and the number of TSA is %s' % (number_of_TS, number_of_TSA))
-    print('The number of TS is %s, and the number of TNC is %s' % (number_of_TS, number_of_TNC))
-    print('The number of TS is %s, and the number of TNA is %s' % (number_of_TS, number_of_TNA))
+    print('The number of TS is %s' %number_of_TS )
+    print('The number of TSC is %s' % number_of_TSC)
+    print('The number of TSA is %s' % number_of_TSA)
+    print('The number of TNC is %s' % number_of_TNC)
+    print('The number of TNA is %s' % number_of_TNA)
     utils.store_dict_as_TAB_delimited_file(gene_class_information, additional_layers_file,headers=['gene_callers_id',
                                                                                                    'gene_class', 'number_of_detections'])
     utils.store_dict_as_TAB_delimited_file(detection_of_genome_in_samples, sample_information_txt,
