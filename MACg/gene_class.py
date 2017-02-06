@@ -171,7 +171,7 @@ def get_gene_classes(data, samples, alpha, beta, gamma, eta):
         adjusted_stds = get_adjusted_stds(data,samples,mean_coverage_of_TS_in_samples,detection_of_genes)
         taxon_specificity = get_taxon_specificity(adjusted_stds,beta)
         new_loss = get_loss_function_value(taxon_specificity, adjusted_stds, beta)
-        epsilon = 1.5 * beta
+        epsilon = 0.5 * beta
         if loss is not None:
             if abs(new_loss - loss) < epsilon:
                 converged = True
