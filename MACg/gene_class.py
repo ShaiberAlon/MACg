@@ -245,7 +245,7 @@ def check_results_for_mock_data(input_name, alpha=0.5, beta=1, gamma=3):
             list_of_wrong_classifications), list_of_wrong_classifications))
 
 
-def main(file_path, additional_layers_file, sample_information_txt, alpha=0.5, beta=1, gamma=3, eta=0.95):
+def main(file_path, additional_layers_file, sample_information_txt, alpha, beta, gamma, eta):
     data, samples = get_data_from_txt_file(file_path)
     gene_class_information, detection_of_genome_in_samples = get_gene_classes(data, samples, alpha, beta, gamma, eta)
     a = lambda field, value : len([gene_id for gene_id in gene_class_information if gene_class_information[gene_id][
@@ -268,35 +268,35 @@ def main(file_path, additional_layers_file, sample_information_txt, alpha=0.5, b
 
 if __name__ == '__main__':
     import argparse
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument('-d', '--data', metavar='FILE', dest='input_file', help='input table of coverage values of '
-    #                                                                            'genes in samples')
-    # parser.add_argument('-a', '--alpha', metavar='NUM', dest='alpha', type=float, default=0.5,
-    #                     help='portion of TSC genes required to decide a genome is detected in a sample')
-    # parser.add_argument('-b', '--beta', metavar='NUM', dest='beta', type=float, default=1,
-    #                     help='Weight of the number of non-taxon-specific genes in the loss function (default = 1). '
-    #                          'This means that if the adjusted standard deviation of a gene is greater than beta, '
-    #                          'then the gene will be classified as non-taxon-specific')
-    # parser.add_argument('-g', '--gamma', metavar='NUM', dest='gamma', type=float, default=3,
-    #                     help='This is used to define detection of genes. It is the number of standard deviation below '
-    #                          'the mean value of the taxon specific genes for which a gene is still considered detected')
-    # parser.add_argument('-e', '--eta', metavar='NUM', dest='eta', type=float, default=0.95,
-    #                     help='Treshold for deciding whether a gene is core or accessory (default is 0.95, hence if a '
-    #                          'gene is detected in at least 95% of the samples (in which the genome is detected) then '
-    #                          'it is considered core')
-    # parser.add_argument('-o', '--out', metavar='FILE', dest='output', help='Output file for classes information')
-    # parser.add_argument('-s', '--sample-detection', metavar='FILE', dest='sample_detection_output', help='Output file '
-    #                                                                                'for sample detection information')
-    # # parser.add_argument('--test', action='store_true', dest='test', help='test that everything is ok and exit')
-    # args = parser.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-d', '--data', metavar='FILE', dest='input_file', help='input table of coverage values of '
+                                                                               'genes in samples')
+    parser.add_argument('-a', '--alpha', metavar='NUM', dest='alpha', type=float, default=0.5,
+                        help='portion of TSC genes required to decide a genome is detected in a sample')
+    parser.add_argument('-b', '--beta', metavar='NUM', dest='beta', type=float, default=1,
+                        help='Weight of the number of non-taxon-specific genes in the loss function (default = 1). '
+                             'This means that if the adjusted standard deviation of a gene is greater than beta, '
+                             'then the gene will be classified as non-taxon-specific')
+    parser.add_argument('-g', '--gamma', metavar='NUM', dest='gamma', type=float, default=3,
+                        help='This is used to define detection of genes. It is the number of standard deviation below '
+                             'the mean value of the taxon specific genes for which a gene is still considered detected')
+    parser.add_argument('-e', '--eta', metavar='NUM', dest='eta', type=float, default=0.95,
+                        help='Treshold for deciding whether a gene is core or accessory (default is 0.95, hence if a '
+                             'gene is detected in at least 95% of the samples (in which the genome is detected) then '
+                             'it is considered core')
+    parser.add_argument('-o', '--out', metavar='FILE', dest='output', help='Output file for classes information')
+    parser.add_argument('-s', '--sample-detection', metavar='FILE', dest='sample_detection_output', help='Output file '
+                                                                                   'for sample detection information')
+    # parser.add_argument('--test', action='store_true', dest='test', help='test that everything is ok and exit')
+    args = parser.parse_args()
 
-    # main(args.input_file, args.output, args.sample_detection_output, args.alpha, args.beta, args.gamma, args.eta)
+    main(args.input_file, args.output, args.sample_detection_output, args.alpha, args.beta, args.gamma, args.eta)
     # # check_results_for_mock_data(input_name)
-    additional_layers_file = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/my_best_delete_me_so_far'
-    input_file = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/p214_Bfrag_positive_with_M_GG_gene_coverage.txt'
-    old_sample_information_txt = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox' \
-                              '/Bfrag_positive_samples_information.txt'
-    new_sample_information_txt = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox' \
-                              '/p214_Bfrag_positive_with_M_GG_gene_coverage_samples_information.txt'
-
-    main(input_file,additional_layers_file,new_sample_information_txt)
+    # additional_layers_file = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/my_best_delete_me_so_far'
+    # input_file = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/p214_Bfrag_positive_with_M_GG_gene_coverage.txt'
+    # old_sample_information_txt = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox' \
+    #                           '/Bfrag_positive_samples_information.txt'
+    # new_sample_information_txt = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox' \
+    #                           '/p214_Bfrag_positive_with_M_GG_gene_coverage_samples_information.txt'
+    #
+    # main(input_file,additional_layers_file,new_sample_information_txt)
