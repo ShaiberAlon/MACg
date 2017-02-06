@@ -163,8 +163,11 @@ def get_gene_classes(data, samples, alpha, beta, gamma, eta):
     while not converged:
         # mean of coverage of all TS genes in each sample
         mean_coverage_of_TS_in_samples = get_mean_coverage_in_samples(data,samples,taxon_specific_genes)
-        std_in_samples = get_std_in_samples(data, samples)
-        detection_of_genes = get_detection_of_genes(data, samples, mean_coverage_of_TS_in_samples, std_in_samples, gamma)
+        # Get the standard deviation of the taxon-specific genes in a sample
+        # TODO: right now, single copy, and multi-copy genes would be treated identically. Hence, multi-copy genes
+        # would skew both the mean and the std of the taxon-specific genes.
+        std_of_TS_in_samples = get_std_in_samples(data, samples, taxon_specific_genes)
+        detection_of_genes = get_detection_of_genes(data, samples, mean_coverage_of_TS_in_samples, std_of_TS_in_samples, gamma)
         detection_of_genome_in_samples = get_detection_of_genome_in_samples(detection_of_genes, samples, alpha, TSC_genes)
         samples_with_genome = [sample_id for sample_id in samples if detection_of_genome_in_samples[sample_id][
             'detection']]
