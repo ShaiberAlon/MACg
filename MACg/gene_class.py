@@ -248,7 +248,7 @@ def check_results_for_mock_data(input_name, alpha=0.5, beta=1, gamma=3):
             list_of_wrong_classifications), list_of_wrong_classifications))
 
 
-def main(file_path, additional_layers_file, sample_information_txt, alpha, beta, gamma, eta):
+def main(file_path, additional_layers_file, sample_information_txt, alpha, beta, gamma, eta, additional_layers_to_append):
     data, samples = get_data_from_txt_file(file_path)
     gene_class_information, detection_of_genome_in_samples = get_gene_classes(data, samples, alpha, beta, gamma, eta)
     a = lambda dictionary, field, value : len([dict_id for dict_id in dictionary if dictionary[
@@ -266,8 +266,17 @@ def main(file_path, additional_layers_file, sample_information_txt, alpha, beta,
     print('The number of TNC is %s' % number_of_TNC)
     print('The number of TNA is %s' % number_of_TNA)
     print('The number of samples with the genome is %s' % number_of_positive_samples)
-    utils.store_dict_as_TAB_delimited_file(gene_class_information, additional_layers_file,headers=['gene_callers_id',
-                                                                                                   'gene_class', 'number_of_detections'])
+    if additional_layers_to_append is None:
+        additional_column_titles = []
+        additional_layers_dict = gene_class_information
+    else:
+        additional_column_titles = utils.get_columns_of_TAB_delim_file(additional_layers_to_append)
+        additional_layers_dict = utils.get_TAB_delimited_file_as_dictionary(additional_layers_to_append,
+                                                                            dict_to_append=gene_class_information,
+                                                                            assign_none_for_missing=True)
+    utils.store_dict_as_TAB_delimited_file(additional_layers_dict, additional_layers_file,headers=['gene_callers_id',
+                                                                                                   'gene_class',
+                                                                                                   'number_of_detections'] + additional_column_titles)
     utils.store_dict_as_TAB_delimited_file(detection_of_genome_in_samples, sample_information_txt,
                                                headers=['samples','detection'])
 
@@ -293,10 +302,13 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--out', metavar='FILE', dest='output', help='Output file for classes information')
     parser.add_argument('-s', '--sample-detection', metavar='FILE', dest='sample_detection_output', help='Output file '
                                                                                    'for sample detection information')
+    parser.add_argument('-A', '--additional-layers', metavar='FILE', dest='additional_layers_to_append', default=None,
+                        help='An additional layer file to append to the one created by the algorithm')
     # parser.add_argument('--test', action='store_true', dest='test', help='test that everything is ok and exit')
     args = parser.parse_args()
 
-    main(args.input_file, args.output, args.sample_detection_output, args.alpha, args.beta, args.gamma, args.eta)
+    main(args.input_file, args.output, args.sample_detection_output, args.alpha, args.beta, args.gamma, args.eta,
+         args.additional_layers_to_append)
     # # check_results_for_mock_data(input_name)
     # additional_layers_file = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/my_best_delete_me_so_far'
     # input_file = '/Users/alonshaiber/PycharmProjects/MACg/tests/sandbox/p214_Bfrag_positive_with_M_GG_gene_coverage.txt'
