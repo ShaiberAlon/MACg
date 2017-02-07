@@ -50,9 +50,11 @@ def get_detection_of_genes(data, samples, mean_coverage_in_samples, std_in_sampl
     detection_of_genes = {}
     for gene_id in data:
         detection_of_genes[gene_id] = {}
+        detection_of_genes[gene_id]['number_of_detections'] = 0
         for sample in samples:
             detection_of_genes[gene_id][sample] = data[gene_id][sample] > max(0,mean_coverage_in_samples[sample] -
                                                                              gamma*std_in_samples[sample])
+            detection_of_genes[gene_id]['number_of_detections'] += detection_of_genes[gene_id][sample]
             if data[gene_id][sample] > 0 and data[gene_id][sample] < mean_coverage_in_samples[sample] - \
                     gamma*std_in_samples[sample]:
                 print('gene %s, in sample %s has non-zero coverage %s, and it has been marked as not detected due to '
@@ -104,15 +106,20 @@ def get_adjusted_stds(data, samples, mean_coverage_in_samples, detection_of_gene
     return adjusted_std
 
 
-def get_taxon_specificity(adjusted_stds, beta):
+def get_taxon_specificity(adjusted_stds, detection_of_genes, beta):
     """For each gene if the adjusted standard deviation (to understand what this is refer to Alon Shaiber) is smaller
     than beta the the gene is a taxon-specific gene (TS), otherwise, it is a non-taxon-specific gene (TNS)"""
     taxon_specificity = {}
+
     for gene_id in adjusted_stds:
-        if adjusted_stds[gene_id] < beta:
-            taxon_specificity[gene_id] = 'TS'
+        # if the gene is not detected in any sample then return NaN
+        if detection_of_genes[gene_id]['number_of_detections'] <= 1:
+            taxon_specificity[gene_id] = 'NaN'
         else:
-            taxon_specificity[gene_id] = 'TNS'
+            if adjusted_stds[gene_id] < beta:
+                taxon_specificity[gene_id] = 'TS'
+            else:
+                taxon_specificity[gene_id] = 'TNS'
     return taxon_specificity
 
 
@@ -139,14 +146,19 @@ def get_number_of_detections_for_gene(detection_of_genes, gene_id, samples):
 def get_core_accessory_info(detection_of_genes, gene_id, samples_with_genome, eta):
     """ Returns 'core'/'accessory' classification for each gene. This is done using only the samples in which the
     genome is detected """
-    if get_number_of_detections_for_gene(detection_of_genes, gene_id, samples_with_genome) < eta * len(samples_with_genome):
+    if detection_of_genes[gene_id]['number_of_detections'] == 0:
+        return 'NaN'
+    elif get_number_of_detections_for_gene(detection_of_genes, gene_id, samples_with_genome) < eta * len(
+        samples_with_genome):
         return 'accessory'
     else:
         return 'core'
 
 
 def get_gene_class(taxon_specificity, core_or_accessory):
-    if taxon_specificity == 'TS':
+    if taxon_specificity == 'NaN' or core_or_accessory == 'NaN':
+        return 'NaN'
+    elif taxon_specificity == 'TS':
         if core_or_accessory == 'core':
             return 'TSC'
         elif core_or_accessory == 'accessory':
@@ -187,7 +199,7 @@ def get_gene_classes(data, samples, alpha, beta, gamma, eta):
         samples_with_genome = [sample_id for sample_id in samples if detection_of_genome_in_samples[sample_id][
             'detection']]
         adjusted_stds = get_adjusted_stds(data,samples,mean_coverage_of_TS_in_samples,detection_of_genes)
-        taxon_specificity = get_taxon_specificity(adjusted_stds,beta)
+        taxon_specificity = get_taxon_specificity(adjusted_stds, detection_of_genes, beta)
         new_loss = get_loss_function_value(taxon_specificity, adjusted_stds, beta)
         epsilon = 0.5 * beta
         if loss is not None:
@@ -199,8 +211,7 @@ def get_gene_classes(data, samples, alpha, beta, gamma, eta):
         for gene_id in data:
             gene_class_information[gene_id] = {}
             gene_class_information[gene_id]['gene_specificity'] = taxon_specificity[gene_id]
-            gene_class_information[gene_id]['number_of_detections'] = get_number_of_detections_for_gene(
-                detection_of_genes, gene_id, samples)
+            gene_class_information[gene_id]['number_of_detections'] = detection_of_genes[gene_id]['number_of_detections']
             gene_class_information[gene_id]['core_or_accessory'] = get_core_accessory_info(detection_of_genes, gene_id,
                                                                                            samples_with_genome, eta)
             gene_class_information[gene_id]['gene_class'] = get_gene_class(gene_class_information[gene_id][
