@@ -273,7 +273,9 @@ def main(file_path, additional_layers_file, sample_information_txt, alpha, beta,
         additional_column_titles = utils.get_columns_of_TAB_delim_file(additional_layers_to_append)
         additional_layers_dict = utils.get_TAB_delimited_file_as_dictionary(additional_layers_to_append,
                                                                             dict_to_append=gene_class_information,
-                                                                            assign_none_for_missing=True)
+                                                                            assign_none_for_missing=True,
+                                                                            column_mapping=[int]+[str]*len(additional_column_titles))
+
     utils.store_dict_as_TAB_delimited_file(additional_layers_dict, additional_layers_file,headers=['gene_callers_id',
                                                                                                    'gene_class',
                                                                                                    'number_of_detections'] + additional_column_titles)
