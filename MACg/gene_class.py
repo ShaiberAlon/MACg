@@ -76,10 +76,13 @@ def get_adjusted_std_for_gene_id(data, gene_id, samples, mean_coverage_in_sample
     # if a gene is detected in a sample in which the genome is not detected then that is a good sign that this is
     #  a TNS gene. But I still kept here the original definition of adjusted_std
     # adjusted_std = np.std([d[gene_id, sample_id] / mean_coverage_in_samples[sample_id] for sample_id in samples if (
-        #         detection_of_genes[gene_id][sample_id] and detection_of_genome_in_samples[sample_id])])
-    adjusted_std = np.std([data[gene_id][sample_id]/mean_coverage_in_samples[sample_id] for sample_id in samples if (
+    #         detection_of_genes[gene_id][sample_id] and detection_of_genome_in_samples[sample_id])])
+    if samples == []:
+        return 0
+    else:
+        adjusted_std = np.std([data[gene_id][sample_id]/mean_coverage_in_samples[sample_id] for sample_id in samples if (
                 detection_of_genes[gene_id][sample_id])])
-    return adjusted_std
+        return adjusted_std
 
 
 def get_adjusted_stds(data, samples, mean_coverage_in_samples, detection_of_genes):
