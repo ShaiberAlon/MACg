@@ -251,14 +251,14 @@ def check_results_for_mock_data(input_name, alpha=0.5, beta=1, gamma=3):
 def main(file_path, additional_layers_file, sample_information_txt, alpha, beta, gamma, eta):
     data, samples = get_data_from_txt_file(file_path)
     gene_class_information, detection_of_genome_in_samples = get_gene_classes(data, samples, alpha, beta, gamma, eta)
-    a = lambda field, value : len([gene_id for gene_id in gene_class_information if gene_class_information[gene_id][
-        field]==value])
-    number_of_TS = a('gene_specificity','TS')
-    number_of_TSC = a('gene_class','TSC')
-    number_of_TSA = a('gene_class','TSA')
-    number_of_TNC = a('gene_class','TNC')
-    number_of_TNA = a('gene_class','TNA')
-    number_of_positive_samples = sum(detection_of_genome_in_samples.values())
+    a = lambda dictionary, field, value : len([dict_id for dict_id in dictionary if dictionary[
+        dict_id][field]==value])
+    number_of_TS = a(gene_class_information, 'gene_specificity','TS')
+    number_of_TSC = a(gene_class_information, 'gene_class','TSC')
+    number_of_TSA = a(gene_class_information, 'gene_class','TSA')
+    number_of_TNC = a(gene_class_information, 'gene_class','TNC')
+    number_of_TNA = a(gene_class_information, 'gene_class','TNA')
+    number_of_positive_samples = a(detection_of_genome_in_samples, 'detection', True)
 
     print('The number of TS is %s' %number_of_TS )
     print('The number of TSC is %s' % number_of_TSC)
