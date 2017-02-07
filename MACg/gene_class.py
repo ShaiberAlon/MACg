@@ -74,7 +74,7 @@ def get_adjusted_std_for_gene_id(data, gene_id, samples, mean_coverage_in_sample
     """Returns the adjusted standard deviation for a gene_id """
     # Note: originally I thought I would only consider samples in which the genome was detected, but in fact,
     # if a gene is detected in a sample in which the genome is not detected then that is a good sign that this is
-    #  a NTS gene. But I still kept here the original definition of adjusted_std
+    #  a TNS gene. But I still kept here the original definition of adjusted_std
     # adjusted_std = np.std([d[gene_id, sample_id] / mean_coverage_in_samples[sample_id] for sample_id in samples if (
         #         detection_of_genes[gene_id][sample_id] and detection_of_genome_in_samples[sample_id])])
     adjusted_std = np.std([data[gene_id][sample_id]/mean_coverage_in_samples[sample_id] for sample_id in samples if (
@@ -92,13 +92,13 @@ def get_adjusted_stds(data, samples, mean_coverage_in_samples, detection_of_gene
 
 def get_taxon_specificity(adjusted_stds, beta):
     """For each gene if the adjusted standard deviation (to understand what this is refer to Alon Shaiber) is smaller
-    than beta the the gene is a taxon-specific gene (TS), otherwise, it is a non-taxon-specific gene (NTS)"""
+    than beta the the gene is a taxon-specific gene (TS), otherwise, it is a non-taxon-specific gene (TNS)"""
     taxon_specificity = {}
     for gene_id in adjusted_stds:
         if adjusted_stds[gene_id] < beta:
             taxon_specificity[gene_id] = 'TS'
         else:
-            taxon_specificity[gene_id] = 'NTS'
+            taxon_specificity[gene_id] = 'TNS'
     return taxon_specificity
 
 
@@ -140,7 +140,7 @@ def get_gene_class(taxon_specificity, core_or_accessory):
         else:
             print('%s is not valid. Value should be \'core\' or \'accessory\'' % core_or_accessory)
             exit(1)
-    elif taxon_specificity == 'NTS':
+    elif taxon_specificity == 'TNS':
         if core_or_accessory == 'core':
             return 'TNC'
         elif core_or_accessory == 'accessory':
@@ -149,7 +149,7 @@ def get_gene_class(taxon_specificity, core_or_accessory):
             print('%s is not valid. Value should be \'core\' or \'accessory\'' % core_or_accessory)
             exit(1)
     else:
-        print('%s is not valid. Value should be \'TS\' or \'NTS\'' % taxon_specificity)
+        print('%s is not valid. Value should be \'TS\' or \'TNS\'' % taxon_specificity)
         exit(1)
 
 
@@ -202,7 +202,7 @@ def get_specificity_from_class_id(class_id):
     if class_id in [1, 2, 3,'1', '2', '3']:
         return 'TS'
     elif class_id in [4,5,'4','5']:
-        return 'NTS'
+        return 'TNS'
     elif class_id in [0,'0']:
         return 'NaN'
     else:
@@ -242,7 +242,7 @@ def check_results_for_mock_data(input_name, alpha=0.5, beta=1, gamma=3):
         else:
             list_of_wrong_classifications.append(gene_id)
     if list_of_wrong_classifications == []:
-        print('Success! All genes were classified properly as TS or NTS (-:')
+        print('Success! All genes were classified properly as TS or TNS (-:')
     else:
         print('There are %s genes that were wrongly classified, and here they are: %s' % (len(
             list_of_wrong_classifications), list_of_wrong_classifications))
