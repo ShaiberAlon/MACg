@@ -160,6 +160,7 @@ def get_gene_classes(data, samples, alpha, beta, gamma, eta):
     converged = False
     loss = None
     TSC_genes = None
+    gene_class_information = {}
     while not converged:
         # mean of coverage of all TS genes in each sample
         mean_coverage_of_TS_in_samples = get_mean_coverage_in_samples(data,samples,taxon_specific_genes)
@@ -181,7 +182,6 @@ def get_gene_classes(data, samples, alpha, beta, gamma, eta):
         loss = new_loss
         print('current value of loss function: %s ' % loss)
 
-        gene_class_information = {}
         for gene_id in data:
             gene_class_information[gene_id] = {}
             gene_class_information[gene_id]['gene_specificity'] = taxon_specificity[gene_id]
