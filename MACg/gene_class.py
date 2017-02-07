@@ -84,9 +84,16 @@ def get_adjusted_std_for_gene_id(data, gene_id, samples, mean_coverage_in_sample
     if samples == []:
         return 0
     else:
-        adjusted_std = np.std([data[gene_id][sample_id]/mean_coverage_in_samples[sample_id] for sample_id in samples if (
-                detection_of_genes[gene_id][sample_id])])
-        return adjusted_std
+        samples_with_gene = []
+        for sample_id in samples:
+            if detection_of_genes[gene_id][sample_id]:
+                samples_with_gene.append(sample_id)
+        if not samples_with_gene:
+            return 0
+        else:
+            adjusted_std = np.std([data[gene_id][sample_id]/mean_coverage_in_samples[sample_id] for sample_id in
+                                   samples_with_gene])
+            return adjusted_std
 
 
 def get_adjusted_stds(data, samples, mean_coverage_in_samples, detection_of_genes):
