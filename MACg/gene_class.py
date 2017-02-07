@@ -26,8 +26,12 @@ def apply_func_to_genes_in_sample(data,samples, func, list_of_genes=None):
 def get_mean_coverage_in_samples(data,samples,list_of_genes=None):
     """ Returns a dictionary with of the average coverage value of the list of genes per sample. if no list of genes is
     supplied then the average is calculated over all genes """
-    mean_coverage_in_samples = apply_func_to_genes_in_sample(data, samples, np.mean, list_of_genes)
-    return mean_coverage_in_samples
+    if not samples:
+        # if all samples don't contain the genome then return 0 for mean value
+        return 0
+    else:
+        mean_coverage_in_samples = apply_func_to_genes_in_sample(data, samples, np.mean, list_of_genes)
+        return mean_coverage_in_samples
 
 
 def get_std_in_samples(data,samples,list_of_genes=None):
