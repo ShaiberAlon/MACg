@@ -216,6 +216,15 @@ def get_gene_classes(data, samples, alpha, beta, gamma, eta):
                                                                                            samples_with_genome, eta)
             gene_class_information[gene_id]['gene_class'] = get_gene_class(gene_class_information[gene_id][
                                                'gene_specificity'], gene_class_information[gene_id]['core_or_accessory'])
+            # counting the number of positive samples that contain the gene
+            gene_class_information[gene_id]['detection_in_positive_samples'] = len([sample_id for sample_id in
+                                                            samples_with_genome if detection_of_genes[gene_id][sample_id]])
+            # Getting the portion of positive samples that contain the gene
+            if gene_class_information[gene_id]['detection_in_positive_samples'] == 0:
+                gene_class_information[gene_id]['portion_detected'] = 0
+            else:
+                gene_class_information[gene_id]['portion_detected'] = gene_class_information[gene_id][
+                    'detection_in_positive_samples'] / len(samples_with_genome)
 
         TSC_genes = [gene_id for gene_id in gene_class_information if gene_class_information[gene_id][
             'gene_class']=='TSC']
@@ -303,7 +312,7 @@ def main(file_path, additional_layers_file, sample_information_txt, alpha, beta,
 
     utils.store_dict_as_TAB_delimited_file(additional_layers_dict, additional_layers_file,headers=['gene_callers_id',
                                                                                                    'gene_class',
-                                                                                                   'number_of_detections'] + additional_column_titles)
+                                                                                                   'number_of_detections', 'portion_detected'] + additional_column_titles)
     utils.store_dict_as_TAB_delimited_file(detection_of_genome_in_samples, sample_information_txt,
                                                headers=['samples','detection'])
 
