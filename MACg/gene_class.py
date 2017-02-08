@@ -16,7 +16,7 @@ def get_data_from_txt_file(file_path):
 
 def apply_func_to_genes_in_sample(data,samples, func, list_of_genes=None):
     """ Apply the give function on the list of genes in each sample. The function is expected to accept a list """
-    if list_of_genes is None:
+    if not list_of_genes:
         list_of_genes = data.keys()
     d = dict(zip(samples, [next(map(func, [[data[gene_id][sample_id] for gene_id in list_of_genes]])) for
                        sample_id in samples]))
@@ -63,7 +63,7 @@ def get_detection_of_genes(data, samples, mean_coverage_in_samples, std_in_sampl
 
 
 def get_detection_of_genome_in_samples(detection_of_genes, samples, alpha, genes_to_consider=None):
-    if genes_to_consider is None:
+    if not genes_to_consider:
         # if no list of genes is supplied then considering all genes
         genes_to_consider = detection_of_genes.keys()
     detection_of_genome_in_samples = {}
@@ -182,18 +182,17 @@ def get_gene_class(taxon_specificity, core_or_accessory):
 def get_gene_classes(data, samples, alpha, beta, gamma, eta):
     """ returning the classification per gene along with detection in samples (i.e. for each sample, whether the
     genome has been detected in the sample or not """
-    taxon_specific_genes = None
     converged = False
     loss = None
     TSC_genes = None
     gene_class_information = {}
     while not converged:
         # mean of coverage of all TS genes in each sample
-        mean_coverage_of_TS_in_samples = get_mean_coverage_in_samples(data,samples,taxon_specific_genes)
+        mean_coverage_of_TS_in_samples = get_mean_coverage_in_samples(data,samples,TSC_genes)
         # Get the standard deviation of the taxon-specific genes in a sample
         # TODO: right now, single copy, and multi-copy genes would be treated identically. Hence, multi-copy genes
         # would skew both the mean and the std of the taxon-specific genes.
-        std_of_TS_in_samples = get_std_in_samples(data, samples, taxon_specific_genes)
+        std_of_TS_in_samples = get_std_in_samples(data, samples, TSC_genes)
         detection_of_genes = get_detection_of_genes(data, samples, mean_coverage_of_TS_in_samples, std_of_TS_in_samples, gamma)
         detection_of_genome_in_samples = get_detection_of_genome_in_samples(detection_of_genes, samples, alpha, TSC_genes)
         samples_with_genome = [sample_id for sample_id in samples if detection_of_genome_in_samples[sample_id][
@@ -300,7 +299,7 @@ def main(file_path, additional_layers_file, sample_information_txt, alpha, beta,
     print('The number of TNC is %s' % number_of_TNC)
     print('The number of TNA is %s' % number_of_TNA)
     print('The number of samples with the genome is %s' % number_of_positive_samples)
-    if additional_layers_to_append is None:
+    if not additional_layers_to_append:
         additional_column_titles = []
         additional_layers_dict = gene_class_information
     else:
